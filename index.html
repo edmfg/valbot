@@ -132,6 +132,7 @@
   svg.constellation {
     width: 100%; height: 100%; display: block;
     cursor: grab;
+    position: absolute; inset: 0;
   }
   svg.constellation:active { cursor: grabbing; }
   .link { stroke: var(--ink); stroke-opacity: 0.18; }
@@ -693,18 +694,34 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
 
   const minDim = Math.min(width, height);
   const maxDim = Math.max(width, height);
-  // Use the larger dimension to set link distance so nodes reach the edges of wide canvases
-  const baseDist = maxDim * 0.16;
-  const distSpread = maxDim * 0.32;
+  // Constellation occupies a generous ring within the viewport.
+  // baseDist/distSpread keyed to minDim so the ring always FITS, but is still close
+  // to the edge of the smaller axis. Highest-affinity satellites at ~0.20 of minDim,
+  // lowest at ~0.42 of minDim from the center.
+  const baseDist = minDim * 0.20;
+  const distSpread = minDim * 0.22;
+  const repulsion = -Math.max(2200, minDim * 1.6);
+  // Seed initial positions on a ring so the sim doesn't start with all nodes at center.
+  // Stretch the ring to fill wider canvases — multiply X displacement by aspect ratio.
+  const aspectStretch = Math.max(1, width / Math.max(1, height));
+  nodes.forEach((n, i) => {
+    if (n.kind === 'audience') { n.x = width / 2; n.y = height / 2; return; }
+    if (n.fx != null) return; // honor persisted drag positions
+    const angle = (i / Math.max(1, nodes.length - 1)) * Math.PI * 2;
+    const r = baseDist + (1 - (n.affinity || 0.7)) * distSpread;
+    n.x = width / 2 + Math.cos(angle) * r * aspectStretch;
+    n.y = height / 2 + Math.sin(angle) * r;
+  });
   const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(d => baseDist + (1 - d.affinity) * distSpread).strength(0.4))
-    .force('charge', d3.forceManyBody().strength(-Math.max(1400, maxDim * 1.0)).distanceMax(maxDim * 0.7))
-    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.03))
-    .force('x', d3.forceX(width / 2).strength(0.012))
-    .force('y', d3.forceY(height / 2).strength(0.025))
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => baseDist + (1 - d.affinity) * distSpread).strength(0.35))
+    .force('charge', d3.forceManyBody().strength(repulsion).distanceMax(maxDim))
+    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.02))
+    .force('x', d3.forceX(width / 2).strength(0.008))
+    .force('y', d3.forceY(height / 2).strength(0.02))
     .force('collide', d3.forceCollide().radius(d => nodeRadius(d) + 28))
     .alpha(1)
-    .alphaDecay(0.025)
+    .alphaDecay(0.018)
+    .velocityDecay(0.35)
     .on('tick', () => {
       link
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
@@ -727,14 +744,26 @@ function textFor(d) {
 
 /* ── Render: one panel for a filter set ─────────────────── */
 let SIMS = { A: null, B: null };
+function panelSize(panelEl) {
+  // Use the panel's clientWidth/Height (more reliable than the SVG rect during early layout).
+  // Fallback to window dimensions if panel hasn't been laid out yet.
+  const w = panelEl.clientWidth || window.innerWidth;
+  const headerH = (document.querySelector('header')?.offsetHeight || 0)
+    + (document.getElementById('filtersRow')?.offsetHeight || 0)
+    + (document.querySelector('footer')?.offsetHeight || 0);
+  const h = panelEl.clientHeight || (window.innerHeight - headerH);
+  return { w: Math.max(400, w), h: Math.max(400, h) };
+}
+
 function renderPanel(panelEl, svgEl, f, which) {
   if (SIMS[which]) { SIMS[which].stop(); SIMS[which] = null; }
   const svg = d3.select(svgEl);
   svg.selectAll('*').remove();
 
-  const rect = svgEl.getBoundingClientRect();
-  const w = rect.width, h = rect.height;
-  if (w < 50 || h < 50) return;
+  const { w, h } = panelSize(panelEl);
+  // Use a viewBox so the constellation always fills the SVG regardless of its rendered px size
+  svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
   // Build base nodes
   let { audience, items } = buildNodes(f);
@@ -897,8 +926,9 @@ function renderGraphPanel(panelEl, svgEl) {
   if (SIMS.A) { SIMS.A.stop(); SIMS.A = null; }
   const svg = d3.select(svgEl);
   svg.selectAll('*').remove();
-  const rect = svgEl.getBoundingClientRect();
-  const w = rect.width, h = rect.height;
+  const { w, h } = panelSize(panelEl);
+  svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   const { nodes, links } = buildGraphNodes();
   const label = panelEl.querySelector('.panel-label');
   if (label) label.textContent = `Network · all audiences × all content`;
@@ -1084,12 +1114,26 @@ function init() {
       render();
     }
   });
-  // Resize
+  // Resize: window AND ResizeObserver on stage so flex layout settling triggers re-render
   let resizeT = null;
-  window.addEventListener('resize', () => {
+  const debouncedRender = () => {
     clearTimeout(resizeT);
-    resizeT = setTimeout(render, 160);
-  });
+    resizeT = setTimeout(() => window.render && window.render(), 80);
+  };
+  window.addEventListener('resize', debouncedRender);
+  if (typeof ResizeObserver !== 'undefined') {
+    const stage = document.getElementById('stage');
+    let lastW = 0, lastH = 0;
+    new ResizeObserver(entries => {
+      for (const e of entries) {
+        const { width, height } = e.contentRect;
+        if (Math.abs(width - lastW) > 4 || Math.abs(height - lastH) > 4) {
+          lastW = width; lastH = height;
+          debouncedRender();
+        }
+      }
+    }).observe(stage);
+  }
   // Keep URL in sync after each render
   const _render = render;
   window.render = function () { _render(); encodeUrl(); };
