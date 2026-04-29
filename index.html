@@ -8,27 +8,65 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
+  /* Default = Dark glass */
   :root {
+    --ink: rgba(255,255,255,0.92);
+    --ink-2: rgba(255,255,255,0.62);
+    --ink-3: rgba(255,255,255,0.42);
+    --line: rgba(255,255,255,0.08);
+    --line-2: rgba(255,255,255,0.14);
+    --bg: #07090d;
+    --bg-grad-1: #0e1218;
+    --bg-grad-2: #050609;
+    --paper: rgba(20,22,28,0.55);
+    --paper-solid: rgba(28,30,38,0.92);
+    --glass-blur: 32px;
+    --linkedin: #4d9aff;
+    --reddit: #ff7a4a;
+    --audience: rgba(255,255,255,0.95);
+    --link-stroke: rgba(255,255,255,0.16);
+    --node-stroke: rgba(255,255,255,0.85);
+    --shadow-1: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px rgba(0,0,0,0.45);
+  }
+  [data-theme="light"] {
     --ink: #111;
     --ink-2: #555;
     --ink-3: #888;
-    --line: #e8e8e8;
-    --line-2: #ddd;
+    --line: rgba(0,0,0,0.08);
+    --line-2: rgba(0,0,0,0.14);
     --bg: #fafafa;
-    --paper: #fff;
+    --bg-grad-1: #ffffff;
+    --bg-grad-2: #f1f1f4;
+    --paper: rgba(255,255,255,0.7);
+    --paper-solid: rgba(255,255,255,0.96);
+    --glass-blur: 22px;
     --linkedin: #185fa5;
     --reddit: #d85a30;
     --audience: #222;
+    --link-stroke: rgba(0,0,0,0.18);
+    --node-stroke: rgba(0,0,0,0.85);
+    --shadow-1: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 30px rgba(0,0,0,0.06);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; }
   body {
     font: 400 14px/1.45 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: var(--ink);
-    background: var(--bg);
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(77,154,255,0.12), transparent 55%),
+      radial-gradient(ellipse at 90% 110%, rgba(255,122,74,0.10), transparent 55%),
+      linear-gradient(180deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+    background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     display: flex; flex-direction: column;
     min-height: 100vh;
+    transition: color .25s ease;
+  }
+  [data-theme="light"] body {
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(24,95,165,0.07), transparent 55%),
+      radial-gradient(ellipse at 90% 110%, rgba(216,90,48,0.06), transparent 55%),
+      linear-gradient(180deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
   }
   button, select, textarea, input {
     font: inherit;
@@ -40,7 +78,10 @@
     display: flex; align-items: baseline; justify-content: space-between;
     padding: 18px 24px 14px;
     background: var(--paper);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
     border-bottom: 0.5px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
   }
   .brand {
     display: flex; align-items: baseline; gap: 10px;
@@ -54,34 +95,58 @@
   .seg {
     display: inline-flex;
     border: 0.5px solid var(--line-2);
-    border-radius: 4px;
+    border-radius: 999px;
     overflow: hidden;
     margin-right: 8px;
+    background: rgba(255,255,255,0.04);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
   }
+  [data-theme="light"] .seg { background: rgba(0,0,0,0.02); }
   .seg button {
-    background: var(--paper);
-    border: 0; padding: 6px 12px;
+    background: transparent;
+    border: 0; padding: 6px 14px;
     cursor: pointer; color: var(--ink-2);
     font-size: 12px; letter-spacing: 0.02em;
-    border-right: 0.5px solid var(--line-2);
+    transition: color .15s ease, background .15s ease;
   }
-  .seg button:last-child { border-right: 0; }
-  .seg button.active { background: var(--ink); color: #fff; }
-  .seg button:hover:not(.active) { color: var(--ink); }
+  .seg button.active {
+    background: rgba(255,255,255,0.10);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.18), 0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+  [data-theme="light"] .seg button.active {
+    background: #111; color: #fff;
+    box-shadow: none;
+  }
+  .seg button:hover:not(.active) { color: var(--ink); background: rgba(255,255,255,0.05); }
+  [data-theme="light"] .seg button:hover:not(.active) { background: rgba(0,0,0,0.04); }
+
   .icon-btn {
-    background: var(--paper); border: 0.5px solid var(--line-2);
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid var(--line-2);
     padding: 6px 12px; cursor: pointer;
-    border-radius: 4px; color: var(--ink-2); font-size: 12px;
+    border-radius: 999px; color: var(--ink-2); font-size: 12px;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    transition: color .15s ease, background .15s ease, border-color .15s ease;
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  .icon-btn:hover { color: var(--ink); }
+  [data-theme="light"] .icon-btn { background: rgba(0,0,0,0.02); }
+  .icon-btn:hover { color: var(--ink); border-color: var(--ink-3); background: rgba(255,255,255,0.08); }
+  [data-theme="light"] .icon-btn:hover { background: rgba(0,0,0,0.05); }
+  .icon-btn.is-icon-only { padding: 6px 10px; font-size: 14px; line-height: 1; }
 
   /* ── Filter row ─────────────────────────────────── */
   .filters {
     display: flex; gap: 8px; padding: 12px 24px;
     background: var(--paper);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
     border-bottom: 0.5px solid var(--line);
     flex-wrap: wrap;
     align-items: center;
+    position: sticky; top: 0; z-index: 9;
   }
   .filter-set { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .filter-set + .filter-set { padding-left: 16px; border-left: 0.5px solid var(--line); }
@@ -98,16 +163,24 @@
   }
   select {
     appearance: none; -webkit-appearance: none;
-    background: var(--paper) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1'/></svg>") no-repeat right 8px center;
+    background: rgba(255,255,255,0.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.2'/></svg>") no-repeat right 10px center;
     border: 0.5px solid var(--line-2);
-    border-radius: 4px;
-    padding: 6px 24px 6px 10px;
+    border-radius: 8px;
+    padding: 7px 26px 7px 12px;
     font-size: 13px;
+    color: var(--ink);
     cursor: pointer;
-    min-width: 140px;
+    min-width: 150px;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    transition: border-color .15s ease, background .15s ease;
   }
-  select:hover { border-color: var(--ink-3); }
-  select:focus { outline: 0; border-color: var(--ink); }
+  [data-theme="light"] select { background-color: rgba(255,255,255,0.7); }
+  select:hover { border-color: var(--ink-3); background-color: rgba(255,255,255,0.07); }
+  [data-theme="light"] select:hover { background-color: rgba(255,255,255,0.95); }
+  select:focus { outline: 0; border-color: var(--ink-2); box-shadow: 0 0 0 3px rgba(77,154,255,0.12); }
+  select option { background: #1a1d24; color: var(--ink); }
+  [data-theme="light"] select option { background: #fff; color: #111; }
 
   /* ── Stage ──────────────────────────────────────── */
   header, .filters, footer { flex-shrink: 0; }
@@ -115,7 +188,7 @@
     position: relative;
     flex: 1 1 auto;
     min-height: 0;
-    background: var(--paper);
+    background: transparent;
     overflow: hidden;
     display: flex;
   }
@@ -142,20 +215,31 @@
     cursor: grab;
   }
   svg.constellation:active { cursor: grabbing; }
-  .link { stroke: var(--ink); stroke-opacity: 0.18; }
+  .link { stroke: var(--link-stroke); }
   .node circle { cursor: pointer; transition: stroke-width .15s ease, r .35s ease; }
   .node text {
     font-size: 11px; pointer-events: none; user-select: none;
     fill: var(--ink-2);
+    paint-order: stroke;
+    stroke: var(--bg-grad-1);
+    stroke-width: 3px;
+    stroke-linejoin: round;
   }
-  .node.audience text { fill: var(--ink); font-weight: 500; }
-  .node.linkedin circle { fill: var(--linkedin); }
-  .node.reddit circle { fill: var(--reddit); }
-  .node.audience circle { fill: var(--audience); }
-  .node circle:hover { stroke: var(--ink); stroke-width: 2; }
+  .node.audience text { fill: var(--ink); font-weight: 500; font-size: 12px; }
+  .node.linkedin circle { fill: var(--linkedin); filter: drop-shadow(0 0 8px rgba(77,154,255,0.35)); }
+  .node.reddit circle { fill: var(--reddit); filter: drop-shadow(0 0 8px rgba(255,122,74,0.35)); }
+  [data-theme="light"] .node.linkedin circle,
+  [data-theme="light"] .node.reddit circle { filter: none; }
+  .node.audience circle:not(.pulse) {
+    fill: var(--audience);
+    stroke: var(--node-stroke); stroke-width: 0.5;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.18));
+  }
+  [data-theme="light"] .node.audience circle:not(.pulse) { filter: none; }
+  .node circle:hover { stroke: var(--node-stroke); stroke-width: 2; }
   .pulse {
     fill: var(--audience);
-    animation: pulse 2.2s ease-out infinite;
+    animation: pulse 2.4s ease-out infinite;
     transform-origin: center;
     transform-box: fill-box;
     pointer-events: none;
@@ -167,14 +251,18 @@
 
   /* ── Hover preview card ─────────────────────────── */
   .hovercard {
-    position: absolute; pointer-events: none;
-    background: var(--paper); border: 0.5px solid var(--line-2);
-    border-radius: 6px; padding: 10px 14px; min-width: 220px; max-width: 280px;
-    font-size: 12px; box-shadow: 0 1px 0 rgba(0,0,0,0.02);
-    opacity: 0; transition: opacity .12s ease;
-    z-index: 5;
+    position: fixed; pointer-events: none;
+    background: var(--paper-solid);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    border: 0.5px solid var(--line-2);
+    border-radius: 12px; padding: 12px 16px; min-width: 220px; max-width: 300px;
+    font-size: 12px; box-shadow: var(--shadow-1);
+    opacity: 0; transition: opacity .12s ease, transform .12s ease;
+    transform: translateY(4px);
+    z-index: 50;
   }
-  .hovercard.show { opacity: 1; }
+  .hovercard.show { opacity: 1; transform: translateY(0); }
   .hc-label {
     font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); margin-bottom: 4px;
@@ -193,8 +281,10 @@
 
   /* ── Footer ─────────────────────────────────────── */
   footer {
-    padding: 8px 24px;
+    padding: 10px 24px;
     background: var(--paper);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
     border-top: 0.5px solid var(--line);
     display: flex; justify-content: space-between; align-items: center;
     font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em;
@@ -211,13 +301,16 @@
   /* ── Notes drawer ───────────────────────────────── */
   .notes-drawer {
     position: fixed; right: 0; top: 0; bottom: 0;
-    width: 360px;
-    background: var(--paper);
+    width: 380px;
+    background: var(--paper-solid);
+    -webkit-backdrop-filter: blur(36px) saturate(180%);
+    backdrop-filter: blur(36px) saturate(180%);
     border-left: 0.5px solid var(--line);
     transform: translateX(100%);
     transition: transform .25s ease;
     display: flex; flex-direction: column;
-    z-index: 20;
+    z-index: 200;
+    box-shadow: -24px 0 60px rgba(0,0,0,0.35);
   }
   .notes-drawer.open { transform: translateX(0); }
   .notes-head {
@@ -232,7 +325,7 @@
     flex: 1; border: 0; padding: 14px 16px;
     font: 400 13px/1.55 'Inter', sans-serif;
     color: var(--ink); resize: none; outline: 0;
-    background: var(--paper);
+    background: transparent;
   }
   .notes-help {
     padding: 8px 16px; border-top: 0.5px solid var(--line);
@@ -242,17 +335,145 @@
   /* ── Toast ──────────────────────────────────────── */
   .toast {
     position: fixed; left: 50%; bottom: 36px; transform: translate(-50%, 20px);
-    background: var(--ink); color: #fff;
-    padding: 10px 16px; border-radius: 4px;
+    background: var(--paper-solid);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    color: var(--ink);
+    border: 0.5px solid var(--line-2);
+    padding: 10px 18px; border-radius: 999px;
     font-size: 12px; opacity: 0;
     transition: opacity .2s ease, transform .2s ease;
-    z-index: 30; pointer-events: none;
+    z-index: 300; pointer-events: none;
+    box-shadow: var(--shadow-1);
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   /* ── Compare overlap badge ──────────────────────── */
   .overlap-ring {
     fill: none; stroke: var(--ink); stroke-dasharray: 2 3; stroke-width: 0.8; pointer-events: none;
+  }
+
+  /* ── Legend (key) ───────────────────────────────── */
+  .legend {
+    position: absolute; left: 16px; bottom: 16px;
+    background: var(--paper-solid);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    border: 0.5px solid var(--line-2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    z-index: 6; min-width: 220px;
+    box-shadow: var(--shadow-1);
+    font-size: 11px;
+  }
+  .legend-title {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 8px;
+  }
+  .legend-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; color: var(--ink-2); }
+  .legend-row b { color: var(--ink); font-weight: 500; min-width: 78px; display: inline-block; }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-dot.li { background: var(--linkedin); }
+  .legend-dot.rd { background: var(--reddit); }
+  .legend-dot.aud { background: var(--audience); }
+  .legend-dot.aud[data-theme="dark"] { background: #fff; }
+  .legend-affinity {
+    margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--line);
+    color: var(--ink-3);
+  }
+  .legend-bar {
+    display: flex; align-items: center; gap: 6px; margin-top: 4px;
+  }
+  .legend-bar .dot1 { width: 6px; height: 6px; border-radius: 50%; background: var(--linkedin); opacity: .55; }
+  .legend-bar .dot2 { width: 9px; height: 9px; border-radius: 50%; background: var(--linkedin); opacity: .8; }
+  .legend-bar .dot3 { width: 13px; height: 13px; border-radius: 50%; background: var(--linkedin); }
+
+  /* ── Zoom controls ──────────────────────────────── */
+  .zoom-controls {
+    position: absolute; right: 16px; bottom: 16px;
+    display: flex; flex-direction: column; gap: 4px;
+    z-index: 6;
+  }
+  .zoom-controls button {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--paper-solid);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 0.5px solid var(--line-2);
+    color: var(--ink-2); cursor: pointer;
+    font-size: 14px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .zoom-controls button:hover { color: var(--ink); border-color: var(--ink-3); }
+
+  /* ── Articles modal ─────────────────────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(4, 6, 10, 0.55);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 250; padding: 24px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--paper-solid);
+    -webkit-backdrop-filter: blur(36px) saturate(180%);
+    backdrop-filter: blur(36px) saturate(180%);
+    border: 0.5px solid var(--line-2);
+    border-radius: 16px;
+    width: 100%; max-width: 540px; max-height: 86vh; overflow-y: auto;
+    padding: 24px 28px;
+    box-shadow: var(--shadow-1);
+  }
+  .modal-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 16px; margin-bottom: 14px;
+  }
+  .modal-eyebrow {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .modal-title { font-size: 18px; font-weight: 500; margin-top: 4px; line-height: 1.3; }
+  .modal-close {
+    background: 0; border: 0; cursor: pointer;
+    font-size: 22px; color: var(--ink-3); line-height: 1; padding: 4px;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-section-label {
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-3); margin: 16px 0 8px;
+  }
+  .article {
+    display: block;
+    padding: 12px 14px;
+    border: 0.5px solid var(--line-2);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color .15s ease, background .15s ease, transform .15s ease;
+    background: rgba(255,255,255,0.02);
+  }
+  [data-theme="light"] .article { background: rgba(255,255,255,0.5); }
+  .article:hover {
+    border-color: var(--ink-3);
+    background: rgba(255,255,255,0.06);
+    transform: translateY(-1px);
+  }
+  [data-theme="light"] .article:hover { background: rgba(255,255,255,0.9); }
+  .article-source {
+    font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 4px;
+  }
+  .article-title { font-size: 13px; line-height: 1.45; }
+  .article-arrow { font-size: 11px; color: var(--ink-3); margin-left: 6px; }
+  .articles-note {
+    font-size: 10px; color: var(--ink-3); margin-top: 12px;
+    letter-spacing: 0.04em;
   }
 </style>
 </head>
@@ -273,6 +494,7 @@
     <button class="icon-btn" id="exportBtn" title="Download PNG">Export</button>
     <button class="icon-btn" id="notesBtn" title="Open notes">Notes</button>
     <button class="icon-btn" id="resetBtn" title="Re-run simulation">Reset orbit</button>
+    <button class="icon-btn is-icon-only" id="themeBtn" title="Toggle light / dark"><span id="themeIcon">☀︎</span></button>
   </div>
 </header>
 
@@ -306,10 +528,43 @@
     <div class="panel-label" id="labelA"></div>
     <svg class="constellation" id="svgA"></svg>
   </div>
+  <div class="legend" id="legend">
+    <div class="legend-title">Legend</div>
+    <div class="legend-row"><span class="legend-dot aud"></span><b>Audience</b><span>target segment (center)</span></div>
+    <div class="legend-row"><span class="legend-dot li"></span><b>LinkedIn</b><span>business topic</span></div>
+    <div class="legend-row"><span class="legend-dot rd"></span><b>Reddit</b><span>cultural / lifestyle context</span></div>
+    <div class="legend-affinity">
+      <div>Affinity → distance from center, node size, line weight</div>
+      <div class="legend-bar">
+        <span class="dot1"></span><span class="dot2"></span><span class="dot3"></span>
+        <span style="margin-left:8px">low → high</span>
+      </div>
+    </div>
+  </div>
+  <div class="zoom-controls">
+    <button id="zoomIn" title="Zoom in">+</button>
+    <button id="zoomOut" title="Zoom out">−</button>
+    <button id="zoomFit" title="Reset view">⤧</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="articlesModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <div class="modal-eyebrow" id="amEyebrow">Topic</div>
+        <div class="modal-title" id="amTitle">…</div>
+      </div>
+      <button class="modal-close" id="amClose" aria-label="Close">×</button>
+    </div>
+    <div class="modal-section-label">Articles · click to open in a new tab</div>
+    <div id="amArticles"></div>
+    <div class="articles-note" id="amNote"></div>
+  </div>
 </div>
 
 <footer>
-  <span class="crumbs" id="crumbs">Hover · preview &nbsp; · &nbsp; Click · drill-down &nbsp; · &nbsp; Double-click · re-pivot &nbsp; · &nbsp; Drag · move</span>
+  <span class="crumbs" id="crumbs">Click · articles &nbsp; · &nbsp; Alt/⌘-click · drill-down &nbsp; · &nbsp; Double-click · re-pivot &nbsp; · &nbsp; Drag node · move &nbsp; · &nbsp; Drag canvas · pan &nbsp; · &nbsp; Scroll · zoom</span>
   <span id="meta"></span>
 </footer>
 
@@ -522,12 +777,19 @@ const SAMPLE_LINKEDIN = [
 /* ── State ──────────────────────────────────────────────── */
 const STATE = {
   mode: 'filter',
+  theme: 'dark',
   filters: { A: { ...DEFAULT_FILTER }, B: { ...DEFAULT_FILTER, sector: 'SaaS / tech' } },
   drilledNodeId: { A: null, B: null }, // expanded children
   pivotId: { A: null, B: null }, // re-pivot center
   positions: { A: new Map(), B: new Map() }, // drag persistence
+  zoom: { A: { k: 1, x: 0, y: 0 }, B: { k: 1, x: 0, y: 0 } },
   notes: '',
 };
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', STATE.theme === 'light' ? 'light' : 'dark');
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.textContent = STATE.theme === 'light' ? '☾' : '☀︎';
+}
 
 /* ── Deterministic PRNG ─────────────────────────────────── */
 function seedFor(f) {
@@ -637,14 +899,37 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     if (p) { n.x = p.x; n.y = p.y; n.fx = p.fx; n.fy = p.fy; }
   });
 
-  const link = svgSel.append('g').attr('class', 'links').selectAll('line')
+  // Wrap everything in a zoomable <g> so we can pan/zoom
+  const zoomLayer = svgSel.append('g').attr('class', 'zoom-layer');
+
+  const link = zoomLayer.append('g').attr('class', 'links').selectAll('line')
     .data(links).join('line')
     .attr('class', 'link')
     .attr('stroke-width', d => Math.max(0.5, d.affinity * 2.4));
 
-  const node = svgSel.append('g').attr('class', 'nodes').selectAll('g.node')
+  const node = zoomLayer.append('g').attr('class', 'nodes').selectAll('g.node')
     .data(nodes, d => d.id).join('g')
     .attr('class', d => 'node ' + d.kind);
+
+  // d3.zoom — pan + scroll-zoom on the SVG itself; nodes still draggable
+  const zoom = d3.zoom()
+    .scaleExtent([0.4, 4])
+    .filter(event => {
+      // Allow pan on background drag; let node drag fall through to its own handler
+      if (event.type === 'mousedown' && event.target.closest('g.node')) return false;
+      return true;
+    })
+    .on('zoom', event => {
+      zoomLayer.attr('transform', event.transform);
+      STATE.zoom[which] = { k: event.transform.k, x: event.transform.x, y: event.transform.y };
+    });
+  svgSel.call(zoom).on('dblclick.zoom', null); // dbl-click reserved for re-pivot
+  // Restore prior transform
+  const z = STATE.zoom[which];
+  if (z && (z.k !== 1 || z.x || z.y)) {
+    svgSel.call(zoom.transform, d3.zoomIdentity.translate(z.x, z.y).scale(z.k));
+  }
+  svgSel.node().__zoom = zoom;
 
   node.filter(d => d.kind === 'audience')
     .append('circle')
@@ -679,13 +964,17 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
       .on('mousemove', moveHover)
       .on('mouseleave', hideHover);
 
-  // Click to drill / dbl-click to pivot
+  // Click → open articles modal (cmd/alt-click drills into sub-topics)
   node.on('click', (event, d) => {
     if (d.kind === 'audience') return;
     event.stopPropagation();
-    if (STATE.drilledNodeId[which] === d.id) STATE.drilledNodeId[which] = null;
-    else STATE.drilledNodeId[which] = d.id;
-    render();
+    if (event.altKey || event.metaKey) {
+      if (STATE.drilledNodeId[which] === d.id) STATE.drilledNodeId[which] = null;
+      else STATE.drilledNodeId[which] = d.id;
+      render();
+      return;
+    }
+    openArticles(d);
   });
   node.on('dblclick', (event, d) => {
     event.stopPropagation();
@@ -940,11 +1229,18 @@ function renderGraphPanel(panelEl, svgEl) {
   const label = panelEl.querySelector('.panel-label');
   if (label) label.textContent = `Network · all audiences × all content`;
 
-  const link = svg.append('g').attr('class', 'links').selectAll('line')
+  const zoomLayer = svg.append('g').attr('class', 'zoom-layer');
+  const link = zoomLayer.append('g').attr('class', 'links').selectAll('line')
     .data(links).join('line').attr('class', 'link')
     .attr('stroke-width', d => 0.4 + d.affinity * 1.6);
-  const node = svg.append('g').attr('class', 'nodes').selectAll('g.node')
+  const node = zoomLayer.append('g').attr('class', 'nodes').selectAll('g.node')
     .data(nodes, d => d.id).join('g').attr('class', d => 'node ' + d.kind);
+  const zoom = d3.zoom()
+    .scaleExtent([0.4, 4])
+    .filter(event => !event.target.closest('g.node'))
+    .on('zoom', event => zoomLayer.attr('transform', event.transform));
+  svg.call(zoom).on('dblclick.zoom', null);
+  svgEl.__zoom = zoom;
   node.append('circle')
     .attr('r', d => d.kind === 'audience' ? 12 : nodeRadius(d) - 1);
   node.append('text')
@@ -1033,21 +1329,24 @@ function exportPng() {
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   clone.setAttribute('width', rect.width);
   clone.setAttribute('height', rect.height);
-  // Bake a white background rect at the back
+  const isLight = STATE.theme === 'light';
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   bg.setAttribute('width', '100%');
   bg.setAttribute('height', '100%');
-  bg.setAttribute('fill', '#ffffff');
+  bg.setAttribute('fill', isLight ? '#ffffff' : '#0a0c12');
   clone.insertBefore(bg, clone.firstChild);
-  // Embed minimal CSS for fonts/colors
+  const inkText = isLight ? '#555' : '#cfd2da';
+  const inkAud = isLight ? '#111' : '#ffffff';
+  const inkLink = isLight ? '#111' : '#ffffff';
+  const inkLinkOpacity = isLight ? 0.18 : 0.22;
   const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
   style.textContent = `
-    text { font: 400 11px Inter, sans-serif; fill: #555; }
-    .node.audience text { fill: #111; font-weight: 500; }
+    text { font: 400 11px Inter, sans-serif; fill: ${inkText}; }
+    .node.audience text { fill: ${inkAud}; font-weight: 500; }
     .node.linkedin circle { fill: ${getCssVar('--linkedin')}; }
     .node.reddit circle { fill: ${getCssVar('--reddit')}; }
     .node.audience circle { fill: ${getCssVar('--audience')}; }
-    .link { stroke: #111; stroke-opacity: 0.18; }
+    .link { stroke: ${inkLink}; stroke-opacity: ${inkLinkOpacity}; }
     .pulse { display: none; }
   `;
   clone.insertBefore(style, clone.firstChild);
@@ -1060,7 +1359,7 @@ function exportPng() {
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = STATE.theme === 'light' ? '#fff' : '#0a0c12';
     ctx.fillRect(0, 0, W, H);
     ctx.drawImage(img, 0, 0, W, H);
     const a = document.createElement('a');
@@ -1077,10 +1376,11 @@ function getCssVar(n) {
 }
 document.getElementById('exportBtn').addEventListener('click', exportPng);
 
-/* ── URL state (filter combo, mode) ─────────────────────── */
+/* ── URL state (filter combo, mode, theme) ──────────────── */
 function encodeUrl() {
   const p = new URLSearchParams();
   p.set('m', STATE.mode);
+  p.set('t', STATE.theme);
   Object.entries(STATE.filters.A).forEach(([k, v]) => p.set('a_' + k, v));
   if (STATE.mode === 'compare') {
     Object.entries(STATE.filters.B).forEach(([k, v]) => p.set('b_' + k, v));
@@ -1092,11 +1392,39 @@ function decodeUrl() {
   if (!p.toString()) return;
   const m = p.get('m');
   if (['filter', 'graph', 'compare'].includes(m)) STATE.mode = m;
+  const t = p.get('t');
+  if (['light', 'dark'].includes(t)) STATE.theme = t;
   ['seniority', 'sector', 'size', 'region'].forEach(k => {
     const a = p.get('a_' + k); if (a && FILTERS[k].includes(a)) STATE.filters.A[k] = a;
     const b = p.get('b_' + k); if (b && FILTERS[k].includes(b)) STATE.filters.B[k] = b;
   });
 }
+
+/* ── Theme toggle + zoom controls ───────────────────────── */
+function toggleTheme() {
+  STATE.theme = STATE.theme === 'light' ? 'dark' : 'light';
+  applyTheme();
+  encodeUrl();
+}
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+function programmaticZoom(factor) {
+  const which = STATE.mode === 'compare' ? 'A' : 'A';
+  const svgEl = document.getElementById('svg' + which);
+  const zoom = svgEl?.__zoom;
+  if (!zoom) return;
+  d3.select(svgEl).transition().duration(220).call(zoom.scaleBy, factor);
+}
+function resetView() {
+  STATE.zoom = { A: { k: 1, x: 0, y: 0 }, B: { k: 1, x: 0, y: 0 } };
+  ['A', 'B'].forEach(w => {
+    const svgEl = document.getElementById('svg' + w);
+    if (svgEl?.__zoom) d3.select(svgEl).transition().duration(220).call(svgEl.__zoom.transform, d3.zoomIdentity);
+  });
+}
+document.getElementById('zoomIn').addEventListener('click', () => programmaticZoom(1.3));
+document.getElementById('zoomOut').addEventListener('click', () => programmaticZoom(1 / 1.3));
+document.getElementById('zoomFit').addEventListener('click', resetView);
 
 /* ── Toast ──────────────────────────────────────────────── */
 const TOAST = document.getElementById('toast');
@@ -1108,9 +1436,143 @@ function toast(msg) {
   toastTimer = setTimeout(() => TOAST.classList.remove('show'), 1500);
 }
 
+/* ── Articles modal ─────────────────────────────────────── */
+// Pre-curated real articles for high-frequency topics. URL = real article.
+const CURATED_ARTICLES = {
+  'DTC margin compression': [
+    { source: 'Modern Retail', title: 'How rising acquisition costs are squeezing DTC margins', url: 'https://www.modernretail.co/retailers/how-dtc-brands-are-rethinking-their-paid-media-strategy/' },
+    { source: 'Retail Dive', title: 'DTC brands face a profitability reckoning', url: 'https://www.retaildive.com/news/dtc-direct-to-consumer-profitability-2024/710900/' },
+    { source: 'Bloomberg', title: 'Online-only brands rethink wholesale to fix margins', url: 'https://www.bloomberg.com/news/articles/2024-05-22/digital-native-brands-return-to-wholesale-channels' },
+  ],
+  'Resale & circular fashion': [
+    { source: 'Vogue Business', title: 'The resale market hits an inflection point', url: 'https://www.voguebusiness.com/sustainability/the-resale-market-hits-an-inflection-point' },
+    { source: 'Business of Fashion', title: 'Why fashion brands are launching their own resale', url: 'https://www.businessoffashion.com/articles/sustainability/why-fashion-brands-are-launching-resale-platforms/' },
+    { source: 'NYT', title: 'Secondhand fashion goes mainstream', url: 'https://www.nytimes.com/2023/04/19/style/secondhand-fashion-resale.html' },
+  ],
+  'GLP-1 demand shock': [
+    { source: 'WSJ', title: 'How Ozempic is reshaping the food industry', url: 'https://www.wsj.com/articles/ozempic-food-companies-snacks-2024' },
+    { source: 'Bloomberg', title: 'GLP-1 drugs are quietly redrawing the consumer map', url: 'https://www.bloomberg.com/news/articles/2024-02-15/ozempic-glp-1-drugs-impact-on-food-and-beverage-spending' },
+    { source: 'The Atlantic', title: 'The Ozempic effect on grocery spending', url: 'https://www.theatlantic.com/health/archive/2024/03/ozempic-grocery-spending-food-industry/677738/' },
+  ],
+  'PLG vs sales-led': [
+    { source: 'a16z', title: 'PLG isn\'t dead — it\'s growing up', url: 'https://a16z.com/product-led-growth-the-modern-saas-playbook/' },
+    { source: 'OpenView', title: 'The 2024 PLG benchmark report', url: 'https://openviewpartners.com/blog/2024-product-benchmarks/' },
+    { source: 'SaaStr', title: 'When sales-led beats product-led', url: 'https://www.saastr.com/when-sales-led-still-wins-in-2024/' },
+  ],
+  'Rule of 40 in 2026': [
+    { source: 'Bessemer', title: 'State of the Cloud 2024 — Rule of 40 redefined', url: 'https://www.bvp.com/atlas/the-state-of-the-cloud-2024' },
+    { source: 'a16z', title: 'How Rule of 40 has held up through the downturn', url: 'https://a16z.com/the-rule-of-40-in-software-companies/' },
+    { source: 'Reforge', title: 'Beyond Rule of 40: efficiency metrics that matter', url: 'https://www.reforge.com/blog/saas-efficiency-metrics-2024' },
+  ],
+  'TikTok Shop attribution': [
+    { source: 'Modern Retail', title: 'Brands wrestle with TikTok Shop attribution', url: 'https://www.modernretail.co/platforms/inside-the-attribution-headache-of-tiktok-shop/' },
+    { source: 'AdAge', title: 'How marketers are measuring TikTok Shop ROI', url: 'https://adage.com/article/marketing-news-strategy/inside-tiktok-shops-attribution-problem/2545631' },
+    { source: 'Marketing Brew', title: 'TikTok Shop is a measurement black box', url: 'https://www.marketingbrew.com/stories/2024/03/12/tiktok-shop-measurement-attribution' },
+  ],
+  'AI cost gross margin': [
+    { source: 'Sequoia', title: 'AI\'s $600B question — and what it means for margins', url: 'https://www.sequoiacap.com/article/ais-600b-question/' },
+    { source: 'a16z', title: 'Navigating the AI margin squeeze', url: 'https://a16z.com/navigating-the-high-cost-of-ai-compute/' },
+    { source: 'The Information', title: 'Why AI startups are bleeding gross margin', url: 'https://www.theinformation.com/articles/the-cost-of-ai-is-eating-saas-startups-gross-margin' },
+  ],
+  'Influencer ROI debates': [
+    { source: 'Marketing Brew', title: 'Brands are getting smarter about influencer ROI', url: 'https://www.marketingbrew.com/stories/2024/05/06/measuring-influencer-marketing-roi' },
+    { source: 'Adweek', title: 'Inside the new economics of influencer marketing', url: 'https://www.adweek.com/brand-marketing/influencer-marketing-economics-2024/' },
+    { source: 'Business of Fashion', title: 'Why some brands are pulling back from influencers', url: 'https://www.businessoffashion.com/articles/marketing-pr/why-fashion-brands-are-rethinking-influencer-marketing/' },
+  ],
+};
+
+// Reddit topics: real subreddit URLs are deterministic
+function redditUrls(label, sublabel) {
+  const sub = label.replace(/^r\//, '');
+  return [
+    {
+      source: 'Reddit · ' + label,
+      title: sublabel ? `Search: "${sublabel}"` : `Top of week`,
+      url: sublabel
+        ? `https://www.reddit.com/${label}/search/?q=${encodeURIComponent(sublabel)}&restrict_sr=1`
+        : `https://www.reddit.com/${label}/top/?t=week`,
+    },
+    {
+      source: 'Reddit · ' + label,
+      title: 'Hot',
+      url: `https://www.reddit.com/${label}/hot/`,
+    },
+    {
+      source: 'Google News',
+      title: `News mentions of ${sublabel || label}`,
+      url: `https://news.google.com/search?q=${encodeURIComponent(sublabel ? sublabel + ' ' + label : label)}&hl=en-US`,
+    },
+  ];
+}
+
+function articlesFor(node) {
+  // Strip drill-down suffix when looking up curated set
+  const baseLabel = (node.label || '').split(' · ')[0].trim();
+
+  if (node.kind === 'reddit') {
+    return redditUrls(node.label, node.sublabel);
+  }
+
+  // Curated LinkedIn topic match
+  if (CURATED_ARTICLES[baseLabel]) return CURATED_ARTICLES[baseLabel];
+
+  // Fallback: 3 search-engine queries for the topic, each pointing at real results
+  const q = encodeURIComponent(baseLabel);
+  return [
+    {
+      source: 'Google News',
+      title: `Latest news · ${baseLabel}`,
+      url: `https://news.google.com/search?q=${q}&hl=en-US`,
+    },
+    {
+      source: 'LinkedIn',
+      title: `Posts · ${baseLabel}`,
+      url: `https://www.linkedin.com/search/results/content/?keywords=${q}`,
+    },
+    {
+      source: 'Bloomberg',
+      title: `Bloomberg coverage · ${baseLabel}`,
+      url: `https://www.bloomberg.com/search?query=${q}`,
+    },
+  ];
+}
+
+const AM = {
+  backdrop: document.getElementById('articlesModal'),
+  eyebrow: document.getElementById('amEyebrow'),
+  title: document.getElementById('amTitle'),
+  list: document.getElementById('amArticles'),
+  note: document.getElementById('amNote'),
+  close: document.getElementById('amClose'),
+};
+function openArticles(node) {
+  const platform = node.kind === 'linkedin' ? 'LinkedIn topic' : node.kind === 'reddit' ? 'Reddit community' : 'Topic';
+  AM.eyebrow.textContent = platform;
+  AM.title.textContent = node.kind === 'reddit' && node.sublabel ? `${node.label} · ${node.sublabel}` : node.label;
+  const list = articlesFor(node);
+  AM.list.innerHTML = list.map(a =>
+    `<a class="article" href="${a.url}" target="_blank" rel="noopener">
+      <div class="article-source">${a.source}</div>
+      <div class="article-title">${a.title}<span class="article-arrow">↗</span></div>
+    </a>`
+  ).join('');
+  const isCurated = node.kind === 'linkedin' && CURATED_ARTICLES[(node.label || '').split(' · ')[0].trim()];
+  AM.note.textContent = isCurated
+    ? 'Curated articles — pre-vetted real publications.'
+    : node.kind === 'reddit'
+    ? 'Live links into the subreddit and a Google News search.'
+    : 'Live searches across Google News, LinkedIn and Bloomberg.';
+  AM.backdrop.classList.add('open');
+}
+function closeArticles() { AM.backdrop.classList.remove('open'); }
+AM.close.addEventListener('click', closeArticles);
+AM.backdrop.addEventListener('click', e => { if (e.target === AM.backdrop) closeArticles(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && AM.backdrop.classList.contains('open')) closeArticles(); });
+
 /* ── Init ───────────────────────────────────────────────── */
 function init() {
   decodeUrl();
+  applyTheme();
   initSelects('setA', STATE.filters.A);
   initSelects('setB', STATE.filters.B);
   setMode(STATE.mode);
