@@ -495,6 +495,12 @@
   .legend-dot.rd { background: var(--reddit); }
   .legend-dot.aud { background: var(--audience); }
   .legend-dot.aud[data-theme="dark"] { background: #fff; }
+  .legend-bridge {
+    width: 18px; height: 0;
+    border-top: 1.5px dashed var(--gold);
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--gold);
+  }
   .legend-affinity {
     margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--line);
     color: var(--ink-3);
@@ -1055,6 +1061,7 @@
     <div class="legend-row"><span class="legend-dot aud"></span><b>Audience</b><span>target segment (center)</span></div>
     <div class="legend-row"><span class="legend-dot li"></span><b>LinkedIn</b><span>business topic</span></div>
     <div class="legend-row"><span class="legend-dot rd"></span><b>Reddit</b><span>cultural / lifestyle context</span></div>
+    <div class="legend-row" title="Same person, two contexts — work narrative ↔ after-hours conversation"><span class="legend-bridge"></span><b>Bridge</b><span>LinkedIn ↔ Reddit overlap</span></div>
     <div class="legend-affinity">
       <div>Affinity distribution · this constellation</div>
       <div class="legend-histo" id="legendHisto"></div>
