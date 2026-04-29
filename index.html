@@ -1471,7 +1471,7 @@ function initSelects(setId, fs) {
 }
 
 /* ── Force simulation per panel ─────────────────────────── */
-function makeSimulation(svgSel, width, height, nodes, links, which) {
+function makeSimulation(svgSel, width, height, nodes, links, which, bridges = []) {
   const positions = STATE.positions[which];
   // Restore persisted positions
   nodes.forEach(n => {
@@ -1866,7 +1866,7 @@ function renderPanel(panelEl, svgEl, f, which) {
   const label = panelEl.querySelector('.panel-label');
   if (label) label.textContent = `${f.seniority} · ${f.sector} · ${f.size} · ${f.region}`;
 
-  SIMS[which] = makeSimulation(svg, w, h, nodes, links, which);
+  SIMS[which] = makeSimulation(svg, w, h, nodes, links, which, bridges);
 
   // Compare-mode overlap rings
   if (STATE.mode === 'compare' && which === 'A') decorateOverlap();
