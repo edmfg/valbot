@@ -1137,14 +1137,12 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     .data(nodes, d => d.id).join('g')
     .attr('class', d => 'node ' + d.kind);
 
-  // d3.zoom — pan + scroll-zoom on the SVG itself; nodes still draggable
+  // d3.zoom is used ONLY for wheel zoom + the programmatic +/− buttons.
+  // Pan is handled exclusively by the manual handler below to avoid the two
+  // systems fighting (which was causing drag to "not let go" on release).
   const zoom = d3.zoom()
     .scaleExtent([0.4, 4])
-    .filter(event => {
-      // Allow pan on background drag; let node drag fall through to its own handler
-      if (event.type === 'mousedown' && event.target.closest('g.node')) return false;
-      return true;
-    })
+    .filter(event => event.type === 'wheel')
     .on('zoom', event => {
       zoomLayer.attr('transform', event.transform);
       STATE.zoom[which] = { k: event.transform.k, x: event.transform.x, y: event.transform.y };
@@ -1157,29 +1155,42 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
   }
   svgSel.node().__zoomBehavior = zoom;
 
-  // Bulletproof manual pan on the catch-rect. Some browsers / SVG event
-  // routings don't reliably bubble mousedown from a transparent rect to the
-  // SVG-attached d3.zoom; this guarantees panning works on any empty area.
-  panRect.node().addEventListener('mousedown', (e) => {
+  // Pointer-capture pan on the catch-rect. Captures the pointer to the rect
+  // so move/up events fire on it even if the cursor leaves the window —
+  // guarantees the drag releases when the user lifts the mouse.
+  const rectEl = panRect.node();
+  rectEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     if (e.target.closest && e.target.closest('g.node, .sticky')) return;
     e.preventDefault();
+    try { rectEl.setPointerCapture(e.pointerId); } catch {}
     const t0 = d3.zoomTransform(svgSel.node());
-    const start = { px: e.clientX, py: e.clientY, tx: t0.x, ty: t0.y, k: t0.k };
+    const start = { px: e.clientX, py: e.clientY, tx: t0.x, ty: t0.y, k: t0.k, id: e.pointerId };
     panRect.style('cursor', 'grabbing');
+
     function onMove(ev) {
+      if (ev.pointerId !== start.id) return;
       const newT = d3.zoomIdentity
         .translate(start.tx + (ev.clientX - start.px), start.ty + (ev.clientY - start.py))
         .scale(start.k);
       svgSel.call(zoom.transform, newT);
     }
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
+    function release(ev) {
+      if (ev && ev.pointerId !== start.id) return;
+      rectEl.removeEventListener('pointermove', onMove);
+      rectEl.removeEventListener('pointerup', release);
+      rectEl.removeEventListener('pointercancel', release);
+      rectEl.removeEventListener('lostpointercapture', release);
+      window.removeEventListener('blur', release);
+      try { rectEl.releasePointerCapture(start.id); } catch {}
       panRect.style('cursor', 'grab');
     }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+
+    rectEl.addEventListener('pointermove', onMove);
+    rectEl.addEventListener('pointerup', release);
+    rectEl.addEventListener('pointercancel', release);
+    rectEl.addEventListener('lostpointercapture', release);
+    window.addEventListener('blur', release, { once: true });
   });
 
   node.filter(d => d.kind === 'audience')
