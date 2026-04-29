@@ -226,10 +226,13 @@
     height: 100%;
   }
   .panel-label {
-    position: absolute; top: 12px; left: 16px;
-    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--ink-3); pointer-events: none;
+    font-weight: 600;
+    display: none; /* shown only in compare mode */
   }
+  .stage.compare .panel-label { display: block; }
   svg.constellation {
     position: absolute; inset: 0;
     width: 100%; height: 100%; display: block;
@@ -445,17 +448,29 @@
   .quick-bar {
     position: absolute; top: 16px; left: 16px;
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 6px;
+    padding: 6px 6px 6px 4px;
     background: var(--paper-solid);
     background-image: var(--highlight);
     -webkit-backdrop-filter: blur(32px) saturate(var(--glass-saturate));
     backdrop-filter: blur(32px) saturate(var(--glass-saturate));
     border: 0.5px solid var(--line-2);
     border-radius: 999px;
-    z-index: 6;
+    z-index: 30;
     box-shadow: var(--shadow-soft), var(--rim);
-    flex-wrap: wrap; max-width: calc(100% - 32px);
+    flex-wrap: nowrap;
+    transition: box-shadow .15s ease;
   }
+  .quick-bar.dragging { box-shadow: 0 16px 40px rgba(0,0,0,0.45), var(--rim); }
+  .quick-grip {
+    cursor: grab;
+    color: var(--ink-3);
+    font-size: 14px; line-height: 1;
+    padding: 0 6px 0 4px;
+    user-select: none;
+    letter-spacing: -2px;
+    font-weight: 700;
+  }
+  .quick-grip:active { cursor: grabbing; }
   .quick-btn {
     background: transparent;
     border: 0;
@@ -715,6 +730,7 @@
     </div>
   </div>
   <div class="quick-bar" id="quickBar">
+    <span class="quick-grip" title="Drag to move">⋮⋮</span>
     <button class="quick-btn" data-q="top3" title="Hide all but the 3 highest-affinity topics">⭐ Top 3</button>
     <button class="quick-btn" data-q="top5" title="Hide all but the 5 highest-affinity topics">✦ Top 5</button>
     <span class="quick-sep"></span>
@@ -1095,15 +1111,15 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     if (p) { n.x = p.x; n.y = p.y; n.fx = p.fx; n.fy = p.fy; }
   });
 
-  // Transparent rect that catches drags anywhere on the canvas (so pan works
-  // even when clicking far from any node) — covers the full SVG.
-  svgSel.append('rect')
+  // Transparent rect catches drags on empty canvas — fills the viewBox.
+  const panRect = svgSel.append('rect')
     .attr('class', 'pan-catcher')
     .attr('x', 0).attr('y', 0)
     .attr('width', width).attr('height', height)
     .attr('fill', 'transparent')
     .style('cursor', 'grab')
     .style('pointer-events', 'all');
+  svgSel.style('touch-action', 'none').style('user-select', 'none');
 
   // Wrap everything in a zoomable <g> so we can pan/zoom
   const zoomLayer = svgSel.append('g').attr('class', 'zoom-layer');
@@ -1140,6 +1156,31 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     svgSel.call(zoom.transform, d3.zoomIdentity.translate(z.x, z.y).scale(z.k));
   }
   svgSel.node().__zoomBehavior = zoom;
+
+  // Bulletproof manual pan on the catch-rect. Some browsers / SVG event
+  // routings don't reliably bubble mousedown from a transparent rect to the
+  // SVG-attached d3.zoom; this guarantees panning works on any empty area.
+  panRect.node().addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest && e.target.closest('g.node, .sticky')) return;
+    e.preventDefault();
+    const t0 = d3.zoomTransform(svgSel.node());
+    const start = { px: e.clientX, py: e.clientY, tx: t0.x, ty: t0.y, k: t0.k };
+    panRect.style('cursor', 'grabbing');
+    function onMove(ev) {
+      const newT = d3.zoomIdentity
+        .translate(start.tx + (ev.clientX - start.px), start.ty + (ev.clientY - start.py))
+        .scale(start.k);
+      svgSel.call(zoom.transform, newT);
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      panRect.style('cursor', 'grab');
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
 
   node.filter(d => d.kind === 'audience')
     .append('circle')
@@ -1861,6 +1902,42 @@ function setQuickView(v) {
 document.querySelectorAll('.quick-btn').forEach(b => {
   b.addEventListener('click', () => setQuickView(b.dataset.q));
 });
+
+// Make the quick-bar draggable via its grip
+(function () {
+  const bar = document.getElementById('quickBar');
+  const grip = bar.querySelector('.quick-grip');
+  if (!grip) return;
+  let dragStart = null;
+  grip.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const rect = bar.getBoundingClientRect();
+    const stage = document.getElementById('stage').getBoundingClientRect();
+    dragStart = {
+      px: e.clientX, py: e.clientY,
+      ox: rect.left - stage.left,
+      oy: rect.top - stage.top,
+      sw: stage.width, sh: stage.height,
+      bw: rect.width, bh: rect.height,
+    };
+    bar.classList.add('dragging');
+    function move(ev) {
+      const nx = Math.max(8, Math.min(dragStart.sw - dragStart.bw - 8, dragStart.ox + (ev.clientX - dragStart.px)));
+      const ny = Math.max(8, Math.min(dragStart.sh - dragStart.bh - 8, dragStart.oy + (ev.clientY - dragStart.py)));
+      bar.style.left = nx + 'px';
+      bar.style.top = ny + 'px';
+      bar.style.right = 'auto';
+      bar.style.bottom = 'auto';
+    }
+    function up() {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      bar.classList.remove('dragging');
+    }
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+})();
 
 /* ── Action card (per-node click) ───────────────────────── */
 const ACTION = {
