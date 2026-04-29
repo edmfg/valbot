@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Orbit · v0.1</title>
+<title>GCP SMB Semantic Themes</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='5' fill='%23222'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23222' stroke-width='0.6'/%3E%3Ccircle cx='28' cy='16' r='2' fill='%23185fa5'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,13 +103,17 @@
     display: flex; align-items: baseline; gap: 10px;
   }
   .brand-name {
-    font-weight: 700; font-size: 15px; letter-spacing: 0.02em;
+    font-weight: 700; font-size: 15px; letter-spacing: 0.04em;
+    text-transform: uppercase;
     background: linear-gradient(180deg, var(--ink) 30%, var(--ink-2) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
-  .brand-version { color: var(--ink-3); font-size: 12px; font-weight: 500; }
+  .brand-version {
+    color: var(--ink-2); font-size: 13px; font-weight: 600;
+    letter-spacing: 0.01em;
+  }
   .brand-tag { color: var(--ink-2); font-size: 12px; margin-left: 16px; font-weight: 500; }
   .actions { display: flex; gap: 4px; align-items: center; }
   .seg {
@@ -240,7 +244,18 @@
   }
   svg.constellation:active { cursor: grabbing; }
   .link { stroke: var(--link-stroke); }
-  .node circle { cursor: pointer; transition: stroke-width .15s ease, r .35s ease; }
+  .node { transition: filter .2s ease; }
+  .node circle { cursor: pointer; transition: stroke-width .15s ease, r .25s ease; }
+  .node:hover { z-index: 5; }
+  .node:hover circle:not(.pulse) {
+    stroke: var(--node-stroke);
+    stroke-width: 1.5;
+  }
+  .node text { transition: font-size .2s ease, fill .2s ease; }
+  .node:hover text {
+    fill: var(--ink);
+    font-weight: 700;
+  }
   .node text {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 11px; font-weight: 500;
@@ -988,8 +1003,8 @@
 
 <header>
   <div class="brand">
-    <span class="brand-name">ORBIT</span>
-    <span class="brand-version">· v0.1</span>
+    <span class="brand-name">GCP SMB</span>
+    <span class="brand-version">Semantic Themes</span>
     <span class="brand-tag">Audience constellation · Google B2B SMB prototype</span>
   </div>
   <div class="actions">
@@ -1584,10 +1599,39 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     });
   node.call(drag);
 
-  // Hover
-  node.on('mouseenter', (event, d) => showHover(event, d))
+  // Hover: enlarge the circle and bump up the text
+  node.on('mouseenter', function (event, d) {
+    showHover(event, d);
+    if (d.kind === 'audience') return;
+    const g = d3.select(this);
+    g.raise(); // bring to front so the bigger label doesn't get clipped
+    g.select('circle:not(.pulse)')
+      .interrupt()
+      .transition().duration(160).ease(d3.easeCubicOut)
+      .attr('r', nodeRadius(d) * 1.55);
+    g.select('text')
+      .interrupt()
+      .transition().duration(160).ease(d3.easeCubicOut)
+      .attr('dy', nodeRadius(d) * 1.55 + 16)
+      .style('font-size', '14px')
+      .style('font-weight', 700);
+  })
       .on('mousemove', moveHover)
-      .on('mouseleave', hideHover);
+      .on('mouseleave', function (event, d) {
+        hideHover();
+        if (d.kind === 'audience') return;
+        const g = d3.select(this);
+        g.select('circle:not(.pulse)')
+          .interrupt()
+          .transition().duration(180).ease(d3.easeCubicOut)
+          .attr('r', nodeRadius(d));
+        g.select('text')
+          .interrupt()
+          .transition().duration(180).ease(d3.easeCubicOut)
+          .attr('dy', nodeRadius(d) + 14)
+          .style('font-size', null)
+          .style('font-weight', null);
+      });
 
   // Click → drill (expand related circles) + reveal action card
   node.on('click', (event, d) => {
