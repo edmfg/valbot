@@ -441,6 +441,95 @@
   }
   .zoom-controls button:hover { color: var(--ink); border-color: var(--ink-3); }
 
+  /* ── Quick-view toolbar ─────────────────────────── */
+  .quick-bar {
+    position: absolute; top: 16px; left: 16px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px;
+    background: var(--paper-solid);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(32px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(32px) saturate(var(--glass-saturate));
+    border: 0.5px solid var(--line-2);
+    border-radius: 999px;
+    z-index: 6;
+    box-shadow: var(--shadow-soft), var(--rim);
+    flex-wrap: wrap; max-width: calc(100% - 32px);
+  }
+  .quick-btn {
+    background: transparent;
+    border: 0;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12px; color: var(--ink-2);
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+    white-space: nowrap;
+  }
+  .quick-btn:hover { background: rgba(255,255,255,0.08); color: var(--ink); }
+  [data-theme="light"] .quick-btn:hover { background: rgba(0,0,0,0.04); }
+  .quick-btn.active {
+    background: var(--ink);
+    color: var(--bg-grad-2);
+    box-shadow: var(--rim);
+  }
+  .quick-sep {
+    width: 0.5px; height: 16px; background: var(--line-2);
+    margin: 0 2px;
+  }
+
+  /* ── Sticky notes (pinned to canvas) ────────────── */
+  .sticky {
+    width: 220px; min-height: 140px;
+    background: linear-gradient(180deg, #fff7c2 0%, #ffeb88 100%);
+    color: #2a2a1a;
+    border-radius: 4px;
+    padding: 12px 14px 28px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.18);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 500;
+    position: relative;
+    transform: rotate(-1.2deg);
+    transform-origin: top left;
+    overflow: hidden;
+  }
+  .sticky::before {
+    /* Tape strip on top */
+    content: '';
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%) rotate(2deg);
+    width: 56px; height: 16px;
+    background: rgba(255,255,255,0.45);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    border-radius: 1px;
+  }
+  .sticky textarea {
+    width: 100%; height: 90px;
+    background: transparent; border: 0; outline: 0;
+    resize: none; color: inherit;
+    font: inherit;
+    line-height: 1.45;
+  }
+  .sticky-actions {
+    position: absolute; right: 6px; bottom: 4px;
+    display: flex; gap: 2px;
+  }
+  .sticky-action {
+    background: transparent; border: 0;
+    width: 22px; height: 22px;
+    cursor: pointer; color: rgba(0,0,0,0.45);
+    border-radius: 4px; font-size: 13px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sticky-action:hover { background: rgba(0,0,0,0.07); color: rgba(0,0,0,0.9); }
+  .sticky-grip {
+    position: absolute; left: 0; right: 0; top: 0; height: 24px;
+    cursor: grab;
+  }
+  .sticky-grip:active { cursor: grabbing; }
+  .sticky.dragging { box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3); }
+
   /* ── Action card (appears on node click) ────────── */
   .action-card {
     position: absolute; top: 16px; left: 50%; transform: translate(-50%, -8px);
@@ -625,6 +714,18 @@
       </div>
     </div>
   </div>
+  <div class="quick-bar" id="quickBar">
+    <button class="quick-btn" data-q="top3" title="Hide all but the 3 highest-affinity topics">⭐ Top 3</button>
+    <button class="quick-btn" data-q="top5" title="Hide all but the 5 highest-affinity topics">✦ Top 5</button>
+    <span class="quick-sep"></span>
+    <button class="quick-btn" data-q="linkedin" title="Hide Reddit, LinkedIn only">💼 LinkedIn</button>
+    <button class="quick-btn" data-q="reddit" title="Hide LinkedIn, Reddit only">🔥 Reddit</button>
+    <span class="quick-sep"></span>
+    <button class="quick-btn" data-q="strong" title="Affinity ≥ 0.75">💪 Strong</button>
+    <button class="quick-btn" data-q="bridges" title="High on both LinkedIn AND Reddit — work × life crossover">🪢 Bridges</button>
+    <span class="quick-sep"></span>
+    <button class="quick-btn" data-q="all" title="Show everything">⊕ All</button>
+  </div>
   <div class="action-card" id="actionCard">
     <div class="action-eyebrow" id="acEyebrow"><span class="swatch"></span><span id="acPlatform">Topic</span></div>
     <div class="action-title" id="acTitle">…</div>
@@ -634,6 +735,7 @@
     </div>
   </div>
   <div class="zoom-controls">
+    <button id="addSticky" title="Pin a sticky note to the canvas">📝</button>
     <button id="zoomIn" title="Zoom in">+</button>
     <button id="zoomOut" title="Zoom out">−</button>
     <button id="zoomFit" title="Reset view">⤧</button>
@@ -870,11 +972,13 @@ const SAMPLE_LINKEDIN = [
 const STATE = {
   mode: 'filter',
   theme: 'dark',
+  quickView: 'all', // 'all' | 'top3' | 'top5' | 'linkedin' | 'reddit' | 'strong' | 'bridges'
   filters: { A: { ...DEFAULT_FILTER }, B: { ...DEFAULT_FILTER, sector: 'SaaS / tech' } },
   drilledNodeId: { A: null, B: null }, // expanded children
   pivotId: { A: null, B: null }, // re-pivot center
   positions: { A: new Map(), B: new Map() }, // drag persistence
   zoom: { A: { k: 1, x: 0, y: 0 }, B: { k: 1, x: 0, y: 0 } },
+  stickies: { A: [], B: [] }, // [{ id, x, y, text }]
   notes: '',
 };
 function applyTheme() {
@@ -1004,6 +1108,9 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
   // Wrap everything in a zoomable <g> so we can pan/zoom
   const zoomLayer = svgSel.append('g').attr('class', 'zoom-layer');
 
+  // Sticky notes (foreignObject inside zoom layer so they pan/zoom with the canvas)
+  renderStickyNotes(zoomLayer, which);
+
   const link = zoomLayer.append('g').attr('class', 'links').selectAll('line')
     .data(links).join('line')
     .attr('class', 'link')
@@ -1032,7 +1139,7 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
   if (z && (z.k !== 1 || z.x || z.y)) {
     svgSel.call(zoom.transform, d3.zoomIdentity.translate(z.x, z.y).scale(z.k));
   }
-  svgSel.node().__zoom = zoom;
+  svgSel.node().__zoomBehavior = zoom;
 
   node.filter(d => d.kind === 'audience')
     .append('circle')
@@ -1254,7 +1361,10 @@ function renderPanel(panelEl, svgEl, f, which) {
     }
   }
 
-  // Drilled node → expand its children orbit
+  // Apply quick-view filter
+  items = applyQuickView(items, STATE.quickView);
+
+  // Drilled node → expand its children orbit (only if drilled node still visible)
   let extra = [];
   if (STATE.drilledNodeId[which]) {
     const parent = items.find(n => n.id === STATE.drilledNodeId[which]);
@@ -1426,7 +1536,7 @@ function renderGraphPanel(panelEl, svgEl) {
     .filter(event => !event.target.closest('g.node'))
     .on('zoom', event => zoomLayer.attr('transform', event.transform));
   svg.call(zoom).on('dblclick.zoom', null);
-  svgEl.__zoom = zoom;
+  svgEl.__zoomBehavior = zoom;
   node.append('circle')
     .attr('r', d => d.kind === 'audience' ? 12 : nodeRadius(d) - 1);
   node.append('text')
@@ -1563,10 +1673,12 @@ function getCssVar(n) {
 document.getElementById('exportBtn').addEventListener('click', exportPng);
 
 /* ── URL state (filter combo, mode, theme) ──────────────── */
+const QUICK_VIEWS = ['all','top3','top5','linkedin','reddit','strong','bridges'];
 function encodeUrl() {
   const p = new URLSearchParams();
   p.set('m', STATE.mode);
   p.set('t', STATE.theme);
+  if (STATE.quickView !== 'all') p.set('q', STATE.quickView);
   Object.entries(STATE.filters.A).forEach(([k, v]) => p.set('a_' + k, v));
   if (STATE.mode === 'compare') {
     Object.entries(STATE.filters.B).forEach(([k, v]) => p.set('b_' + k, v));
@@ -1580,6 +1692,8 @@ function decodeUrl() {
   if (['filter', 'graph', 'compare'].includes(m)) STATE.mode = m;
   const t = p.get('t');
   if (['light', 'dark'].includes(t)) STATE.theme = t;
+  const q = p.get('q');
+  if (QUICK_VIEWS.includes(q)) STATE.quickView = q;
   ['seniority', 'sector', 'size', 'region'].forEach(k => {
     const a = p.get('a_' + k); if (a && FILTERS[k].includes(a)) STATE.filters.A[k] = a;
     const b = p.get('b_' + k); if (b && FILTERS[k].includes(b)) STATE.filters.B[k] = b;
@@ -1595,17 +1709,19 @@ function toggleTheme() {
 document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
 function programmaticZoom(factor) {
-  const which = STATE.mode === 'compare' ? 'A' : 'A';
-  const svgEl = document.getElementById('svg' + which);
-  const zoom = svgEl?.__zoom;
-  if (!zoom) return;
-  d3.select(svgEl).transition().duration(220).call(zoom.scaleBy, factor);
+  ['A', 'B'].forEach(w => {
+    const svgEl = document.getElementById('svg' + w);
+    const zoom = svgEl?.__zoomBehavior;
+    if (!zoom) return;
+    d3.select(svgEl).transition().duration(220).call(zoom.scaleBy, factor);
+  });
 }
 function resetView() {
   STATE.zoom = { A: { k: 1, x: 0, y: 0 }, B: { k: 1, x: 0, y: 0 } };
   ['A', 'B'].forEach(w => {
     const svgEl = document.getElementById('svg' + w);
-    if (svgEl?.__zoom) d3.select(svgEl).transition().duration(220).call(svgEl.__zoom.transform, d3.zoomIdentity);
+    const zoom = svgEl?.__zoomBehavior;
+    if (zoom) d3.select(svgEl).transition().duration(220).call(zoom.transform, d3.zoomIdentity);
   });
 }
 document.getElementById('zoomIn').addEventListener('click', () => programmaticZoom(1.3));
@@ -1621,6 +1737,130 @@ function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => TOAST.classList.remove('show'), 1500);
 }
+
+/* ── Sticky notes ───────────────────────────────────────── */
+function renderStickyNotes(zoomLayer, which) {
+  const stickies = STATE.stickies[which] || [];
+  if (!stickies.length) return;
+  const group = zoomLayer.append('g').attr('class', 'stickies');
+  stickies.forEach(sn => {
+    const fo = group.append('foreignObject')
+      .attr('class', 'sticky-fo')
+      .attr('x', sn.x).attr('y', sn.y)
+      .attr('width', 240).attr('height', 160)
+      .attr('overflow', 'visible');
+    const div = fo.append('xhtml:div').attr('class', 'sticky');
+    // Drag grip
+    const grip = div.append('xhtml:div').attr('class', 'sticky-grip').attr('title', 'Drag to move');
+    // Editable textarea
+    div.append('xhtml:textarea')
+      .attr('placeholder', 'Pin a note…')
+      .property('value', sn.text || '')
+      .on('input', function () { sn.text = this.value; });
+    // Action buttons
+    const actions = div.append('xhtml:div').attr('class', 'sticky-actions');
+    actions.append('xhtml:button')
+      .attr('class', 'sticky-action')
+      .attr('title', 'Delete')
+      .text('×')
+      .on('click', () => {
+        STATE.stickies[which] = STATE.stickies[which].filter(s => s.id !== sn.id);
+        render();
+      });
+    // Drag behavior on grip
+    let startMouse = null, startPos = null;
+    grip.on('mousedown', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      startMouse = { x: event.clientX, y: event.clientY };
+      startPos = { x: sn.x, y: sn.y };
+      div.classed('dragging', true);
+      const svgEl = document.getElementById('svg' + which);
+      const ctm = svgEl.getScreenCTM();
+      const scale = ctm ? ctm.a : 1; // approximation including zoom
+      function move(e) {
+        const dx = (e.clientX - startMouse.x) / scale;
+        const dy = (e.clientY - startMouse.y) / scale;
+        sn.x = startPos.x + dx;
+        sn.y = startPos.y + dy;
+        fo.attr('x', sn.x).attr('y', sn.y);
+      }
+      function up() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+        div.classed('dragging', false);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
+  });
+}
+
+function addSticky() {
+  const which = (STATE.mode === 'compare') ? 'A' : 'A';
+  const panelEl = document.getElementById('panel' + which);
+  if (!panelEl) return;
+  const { w, h } = panelSize(panelEl);
+  // Place near the visible center, accounting for current zoom transform
+  const z = STATE.zoom[which] || { k: 1, x: 0, y: 0 };
+  const cx = (w / 2 - z.x) / z.k - 120;
+  const cy = (h / 2 - z.y) / z.k - 80 + (Math.random() * 40 - 20);
+  STATE.stickies[which].push({
+    id: 'sn:' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    x: cx, y: cy, text: '',
+  });
+  render();
+  toast('Sticky note added');
+}
+document.getElementById('addSticky').addEventListener('click', addSticky);
+
+/* ── Quick-view toolbar ─────────────────────────────────── */
+function applyQuickView(items, view) {
+  if (!items || !items.length) return items;
+  switch (view) {
+    case 'top3':
+      return [...items].sort((a, b) => b.affinity - a.affinity).slice(0, 3);
+    case 'top5':
+      return [...items].sort((a, b) => b.affinity - a.affinity).slice(0, 5);
+    case 'linkedin':
+      return items.filter(n => n.kind === 'linkedin');
+    case 'reddit':
+      return items.filter(n => n.kind === 'reddit');
+    case 'strong':
+      return items.filter(n => (n.affinity || 0) >= 0.75);
+    case 'bridges': {
+      // Show topics that score high on BOTH platforms — proxy: pick top half
+      // of linkedin AND top half of reddit, then surface them all together.
+      const li = items.filter(n => n.kind === 'linkedin');
+      const rd = items.filter(n => n.kind === 'reddit');
+      const liCut = li.length ? li.map(n => n.affinity).sort((a,b) => b - a)[Math.max(0, Math.ceil(li.length / 2) - 1)] : 0;
+      const rdCut = rd.length ? rd.map(n => n.affinity).sort((a,b) => b - a)[Math.max(0, Math.ceil(rd.length / 2) - 1)] : 0;
+      return items.filter(n =>
+        (n.kind === 'linkedin' && n.affinity >= liCut) ||
+        (n.kind === 'reddit'   && n.affinity >= rdCut)
+      );
+    }
+    case 'all':
+    default:
+      return items;
+  }
+}
+function setQuickView(v) {
+  STATE.quickView = v;
+  // Drill state may now point at a node that's hidden; clear it for safety
+  STATE.drilledNodeId = { A: null, B: null };
+  hideActionCard();
+  document.querySelectorAll('.quick-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.q === v));
+  // Always treat "all" as not-active (no pill needed for the default state)
+  if (v === 'all') {
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+  }
+  render();
+}
+document.querySelectorAll('.quick-btn').forEach(b => {
+  b.addEventListener('click', () => setQuickView(b.dataset.q));
+});
 
 /* ── Action card (per-node click) ───────────────────────── */
 const ACTION = {
@@ -1796,6 +2036,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && AM.backdro
 function init() {
   decodeUrl();
   applyTheme();
+  // Reflect quick-view state on the toolbar
+  if (STATE.quickView !== 'all') {
+    document.querySelectorAll('.quick-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.q === STATE.quickView));
+  }
   initSelects('setA', STATE.filters.A);
   initSelects('setB', STATE.filters.B);
   setMode(STATE.mode);
