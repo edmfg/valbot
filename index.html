@@ -5,52 +5,66 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Orbit · v0.1</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='5' fill='%23222'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23222' stroke-width='0.6'/%3E%3Ccircle cx='28' cy='16' r='2' fill='%23185fa5'/%3E%3C/svg%3E" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
   /* Default = Dark glass */
   :root {
-    --ink: rgba(255,255,255,0.92);
-    --ink-2: rgba(255,255,255,0.62);
-    --ink-3: rgba(255,255,255,0.42);
-    --line: rgba(255,255,255,0.08);
+    --ink: rgba(255,255,255,0.94);
+    --ink-2: rgba(255,255,255,0.66);
+    --ink-3: rgba(255,255,255,0.44);
+    --line: rgba(255,255,255,0.07);
     --line-2: rgba(255,255,255,0.14);
-    --bg: #07090d;
-    --bg-grad-1: #0e1218;
-    --bg-grad-2: #050609;
-    --paper: rgba(20,22,28,0.55);
-    --paper-solid: rgba(28,30,38,0.92);
-    --glass-blur: 32px;
+    --bg: #06080c;
+    --bg-grad-1: #0b0f15;
+    --bg-grad-2: #04050a;
+    --paper: rgba(22,24,30,0.50);
+    --paper-2: rgba(30,32,40,0.62);
+    --paper-solid: rgba(28,30,38,0.86);
+    --glass-blur: 38px;
+    --glass-saturate: 180%;
     --linkedin: #4d9aff;
     --reddit: #ff7a4a;
-    --audience: rgba(255,255,255,0.95);
+    --audience: rgba(255,255,255,0.96);
     --link-stroke: rgba(255,255,255,0.16);
     --node-stroke: rgba(255,255,255,0.85);
-    --shadow-1: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px rgba(0,0,0,0.45);
+    /* Apple-style layered shadow + inner highlight */
+    --rim: 0 0 0 0.5px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.30);
+    --shadow-1: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.35);
+    --shadow-soft: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.30);
+    --highlight: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.0) 50%, rgba(255,255,255,0.0) 100%);
   }
   [data-theme="light"] {
-    --ink: #111;
-    --ink-2: #555;
-    --ink-3: #888;
-    --line: rgba(0,0,0,0.08);
-    --line-2: rgba(0,0,0,0.14);
-    --bg: #fafafa;
+    --ink: #0e0f12;
+    --ink-2: #4d525b;
+    --ink-3: #8a8f99;
+    --line: rgba(0,0,0,0.07);
+    --line-2: rgba(0,0,0,0.13);
+    --bg: #f7f7fa;
     --bg-grad-1: #ffffff;
-    --bg-grad-2: #f1f1f4;
-    --paper: rgba(255,255,255,0.7);
-    --paper-solid: rgba(255,255,255,0.96);
-    --glass-blur: 22px;
+    --bg-grad-2: #ecedf2;
+    --paper: rgba(255,255,255,0.62);
+    --paper-2: rgba(255,255,255,0.78);
+    --paper-solid: rgba(255,255,255,0.94);
+    --glass-blur: 26px;
+    --glass-saturate: 160%;
     --linkedin: #185fa5;
     --reddit: #d85a30;
-    --audience: #222;
+    --audience: #1a1c20;
     --link-stroke: rgba(0,0,0,0.18);
     --node-stroke: rgba(0,0,0,0.85);
-    --shadow-1: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 30px rgba(0,0,0,0.06);
+    --rim: 0 0 0 0.5px rgba(255,255,255,0.6), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.04);
+    --shadow-1: 0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 36px rgba(20,30,60,0.10), 0 2px 6px rgba(0,0,0,0.04);
+    --shadow-soft: 0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 18px rgba(0,0,0,0.04);
+    --highlight: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.0) 60%, rgba(255,255,255,0.0) 100%);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; }
   body {
-    font: 400 14px/1.45 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font: 500 14px/1.45 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    letter-spacing: -0.005em;
     color: var(--ink);
     background:
       radial-gradient(ellipse at 20% -10%, rgba(77,154,255,0.12), transparent 55%),
@@ -78,19 +92,25 @@
     display: flex; align-items: baseline; justify-content: space-between;
     padding: 18px 24px 14px;
     background: var(--paper);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     border-bottom: 0.5px solid var(--line);
     position: sticky; top: 0; z-index: 10;
+    box-shadow: var(--rim);
   }
   .brand {
     display: flex; align-items: baseline; gap: 10px;
   }
   .brand-name {
-    font-weight: 500; font-size: 14px; letter-spacing: 0.04em;
+    font-weight: 700; font-size: 15px; letter-spacing: 0.02em;
+    background: linear-gradient(180deg, var(--ink) 30%, var(--ink-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  .brand-version { color: var(--ink-3); font-size: 12px; }
-  .brand-tag { color: var(--ink-2); font-size: 12px; margin-left: 16px; }
+  .brand-version { color: var(--ink-3); font-size: 12px; font-weight: 500; }
+  .brand-tag { color: var(--ink-2); font-size: 12px; margin-left: 16px; font-weight: 500; }
   .actions { display: flex; gap: 4px; align-items: center; }
   .seg {
     display: inline-flex;
@@ -139,10 +159,11 @@
 
   /* ── Filter row ─────────────────────────────────── */
   .filters {
-    display: flex; gap: 8px; padding: 12px 24px;
+    display: flex; gap: 8px; padding: 14px 24px;
     background: var(--paper);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     border-bottom: 0.5px solid var(--line);
     flex-wrap: wrap;
     align-items: center;
@@ -158,8 +179,8 @@
     display: inline-flex; flex-direction: column;
   }
   .field label {
-    font-size: 10px; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-3); margin-bottom: 2px;
+    font-size: 10px; letter-spacing: 0.1em; font-weight: 600;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
   }
   select {
     appearance: none; -webkit-appearance: none;
@@ -218,14 +239,17 @@
   .link { stroke: var(--link-stroke); }
   .node circle { cursor: pointer; transition: stroke-width .15s ease, r .35s ease; }
   .node text {
-    font-size: 11px; pointer-events: none; user-select: none;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: -0.005em;
+    pointer-events: none; user-select: none;
     fill: var(--ink-2);
     paint-order: stroke;
     stroke: var(--bg-grad-1);
     stroke-width: 3px;
     stroke-linejoin: round;
   }
-  .node.audience text { fill: var(--ink); font-weight: 500; font-size: 12px; }
+  .node.audience text { fill: var(--ink); font-weight: 700; font-size: 13px; letter-spacing: 0; }
   .node.linkedin circle { fill: var(--linkedin); filter: drop-shadow(0 0 8px rgba(77,154,255,0.35)); }
   .node.reddit circle { fill: var(--reddit); filter: drop-shadow(0 0 8px rgba(255,122,74,0.35)); }
   [data-theme="light"] .node.linkedin circle,
@@ -253,11 +277,12 @@
   .hovercard {
     position: fixed; pointer-events: none;
     background: var(--paper-solid);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(32px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(32px) saturate(var(--glass-saturate));
     border: 0.5px solid var(--line-2);
-    border-radius: 12px; padding: 12px 16px; min-width: 220px; max-width: 300px;
-    font-size: 12px; box-shadow: var(--shadow-1);
+    border-radius: 14px; padding: 14px 18px; min-width: 240px; max-width: 320px;
+    font-size: 12px; box-shadow: var(--shadow-1), var(--rim);
     opacity: 0; transition: opacity .12s ease, transform .12s ease;
     transform: translateY(4px);
     z-index: 50;
@@ -283,11 +308,13 @@
   footer {
     padding: 10px 24px;
     background: var(--paper);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     border-top: 0.5px solid var(--line);
     display: flex; justify-content: space-between; align-items: center;
     font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em;
+    box-shadow: var(--rim);
   }
   footer span + span { margin-left: 16px; }
   .crumbs { color: var(--ink-2); font-size: 11px; }
@@ -303,14 +330,15 @@
     position: fixed; right: 0; top: 0; bottom: 0;
     width: 380px;
     background: var(--paper-solid);
-    -webkit-backdrop-filter: blur(36px) saturate(180%);
-    backdrop-filter: blur(36px) saturate(180%);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(40px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(40px) saturate(var(--glass-saturate));
     border-left: 0.5px solid var(--line);
     transform: translateX(100%);
     transition: transform .25s ease;
     display: flex; flex-direction: column;
     z-index: 200;
-    box-shadow: -24px 0 60px rgba(0,0,0,0.35);
+    box-shadow: -24px 0 60px rgba(0,0,0,0.35), var(--rim);
   }
   .notes-drawer.open { transform: translateX(0); }
   .notes-head {
@@ -357,13 +385,14 @@
   .legend {
     position: absolute; left: 16px; bottom: 16px;
     background: var(--paper-solid);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(32px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(32px) saturate(var(--glass-saturate));
     border: 0.5px solid var(--line-2);
-    border-radius: 12px;
-    padding: 12px 14px;
-    z-index: 6; min-width: 220px;
-    box-shadow: var(--shadow-1);
+    border-radius: 14px;
+    padding: 14px 16px;
+    z-index: 6; min-width: 240px;
+    box-shadow: var(--shadow-soft), var(--rim);
     font-size: 11px;
   }
   .legend-title {
@@ -398,17 +427,71 @@
     z-index: 6;
   }
   .zoom-controls button {
-    width: 32px; height: 32px; border-radius: 8px;
+    width: 36px; height: 36px; border-radius: 10px;
     background: var(--paper-solid);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(24px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(24px) saturate(var(--glass-saturate));
+    border: 0.5px solid var(--line-2);
+    color: var(--ink-2); cursor: pointer;
+    font-size: 15px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+    box-shadow: var(--shadow-soft), var(--rim);
+  }
+  .zoom-controls button:hover { color: var(--ink); border-color: var(--ink-3); }
+
+  /* ── Action card (appears on node click) ────────── */
+  .action-card {
+    position: absolute; top: 16px; left: 50%; transform: translate(-50%, -8px);
+    background: var(--paper-solid);
+    -webkit-backdrop-filter: blur(36px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(36px) saturate(var(--glass-saturate));
+    border-radius: 14px;
+    padding: 14px 16px;
+    z-index: 20;
+    min-width: 260px; max-width: 380px;
+    box-shadow: var(--shadow-1), var(--rim);
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    background-image: var(--highlight);
+  }
+  .action-card.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .action-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; margin-bottom: 6px;
+  }
+  .action-eyebrow .swatch {
+    width: 8px; height: 8px; border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .action-eyebrow.linkedin .swatch { background: var(--linkedin); color: var(--linkedin); }
+  .action-eyebrow.reddit .swatch { background: var(--reddit); color: var(--reddit); }
+  .action-title { font-size: 15px; font-weight: 600; line-height: 1.3; margin-bottom: 10px; }
+  .action-row { display: flex; gap: 8px; }
+  .action-btn {
+    background: rgba(255,255,255,0.06);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     border: 0.5px solid var(--line-2);
-    color: var(--ink-2); cursor: pointer;
-    font-size: 14px; line-height: 1;
-    display: flex; align-items: center; justify-content: center;
-    transition: color .15s ease, border-color .15s ease;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12px; font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .12s ease;
+    box-shadow: var(--rim);
   }
-  .zoom-controls button:hover { color: var(--ink); border-color: var(--ink-3); }
+  [data-theme="light"] .action-btn { background: rgba(255,255,255,0.6); }
+  .action-btn:hover { background: rgba(255,255,255,0.12); transform: translateY(-1px); border-color: var(--ink-3); }
+  [data-theme="light"] .action-btn:hover { background: rgba(255,255,255,0.95); }
+  .action-btn.primary {
+    background: var(--ink);
+    color: var(--bg-grad-2);
+    border-color: transparent;
+  }
+  .action-btn.primary:hover { background: var(--ink); transform: translateY(-1px); filter: brightness(1.05); }
 
   /* ── Articles modal ─────────────────────────────── */
   .modal-backdrop {
@@ -422,13 +505,14 @@
   .modal-backdrop.open { display: flex; }
   .modal {
     background: var(--paper-solid);
-    -webkit-backdrop-filter: blur(36px) saturate(180%);
-    backdrop-filter: blur(36px) saturate(180%);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(40px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(40px) saturate(var(--glass-saturate));
     border: 0.5px solid var(--line-2);
-    border-radius: 16px;
+    border-radius: 18px;
     width: 100%; max-width: 540px; max-height: 86vh; overflow-y: auto;
-    padding: 24px 28px;
-    box-shadow: var(--shadow-1);
+    padding: 28px 32px;
+    box-shadow: var(--shadow-1), var(--rim);
   }
   .modal-head {
     display: flex; justify-content: space-between; align-items: flex-start;
@@ -541,6 +625,14 @@
       </div>
     </div>
   </div>
+  <div class="action-card" id="actionCard">
+    <div class="action-eyebrow" id="acEyebrow"><span class="swatch"></span><span id="acPlatform">Topic</span></div>
+    <div class="action-title" id="acTitle">…</div>
+    <div class="action-row">
+      <button class="action-btn primary" id="acArticles">View example content →</button>
+      <button class="action-btn" id="acClose">Close</button>
+    </div>
+  </div>
   <div class="zoom-controls">
     <button id="zoomIn" title="Zoom in">+</button>
     <button id="zoomOut" title="Zoom out">−</button>
@@ -564,7 +656,7 @@
 </div>
 
 <footer>
-  <span class="crumbs" id="crumbs">Click · articles &nbsp; · &nbsp; Alt/⌘-click · drill-down &nbsp; · &nbsp; Double-click · re-pivot &nbsp; · &nbsp; Drag node · move &nbsp; · &nbsp; Drag canvas · pan &nbsp; · &nbsp; Scroll · zoom</span>
+  <span class="crumbs" id="crumbs">Click circle · expand related &nbsp; · &nbsp; Action card · view example content &nbsp; · &nbsp; Double-click · re-pivot &nbsp; · &nbsp; Drag canvas · pan &nbsp; · &nbsp; Scroll · zoom</span>
   <span id="meta"></span>
 </footer>
 
@@ -880,11 +972,11 @@ function initSelects(setId, fs) {
     sel.innerHTML = FILTERS[k].map(o => `<option ${o === fs[k] ? 'selected' : ''}>${o}</option>`).join('');
     sel.addEventListener('change', () => {
       fs[k] = sel.value;
-      // Clear positions + drill state on filter change for that set
       const which = setId === 'setA' ? 'A' : 'B';
       STATE.positions[which].clear();
       STATE.drilledNodeId[which] = null;
       STATE.pivotId[which] = null;
+      hideActionCard();
       render();
     });
   });
@@ -899,13 +991,24 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     if (p) { n.x = p.x; n.y = p.y; n.fx = p.fx; n.fy = p.fy; }
   });
 
+  // Transparent rect that catches drags anywhere on the canvas (so pan works
+  // even when clicking far from any node) — covers the full SVG.
+  svgSel.append('rect')
+    .attr('class', 'pan-catcher')
+    .attr('x', 0).attr('y', 0)
+    .attr('width', width).attr('height', height)
+    .attr('fill', 'transparent')
+    .style('cursor', 'grab')
+    .style('pointer-events', 'all');
+
   // Wrap everything in a zoomable <g> so we can pan/zoom
   const zoomLayer = svgSel.append('g').attr('class', 'zoom-layer');
 
   const link = zoomLayer.append('g').attr('class', 'links').selectAll('line')
     .data(links).join('line')
     .attr('class', 'link')
-    .attr('stroke-width', d => Math.max(0.5, d.affinity * 2.4));
+    .attr('stroke-width', d => 0.4 + Math.pow(d.affinity || 0.5, 1.5) * 4.2)
+    .attr('stroke-opacity', d => 0.10 + (d.affinity || 0.5) * 0.30);
 
   const node = zoomLayer.append('g').attr('class', 'nodes').selectAll('g.node')
     .data(nodes, d => d.id).join('g')
@@ -943,7 +1046,7 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
 
   node.append('text')
     .attr('text-anchor', 'middle')
-    .attr('dy', d => nodeRadius(d) + 12)
+    .attr('dy', d => nodeRadius(d) + 14)
     .text(d => textFor(d));
 
   // Drag
@@ -964,17 +1067,18 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
       .on('mousemove', moveHover)
       .on('mouseleave', hideHover);
 
-  // Click → open articles modal (cmd/alt-click drills into sub-topics)
+  // Click → drill (expand related circles) + reveal action card
   node.on('click', (event, d) => {
     if (d.kind === 'audience') return;
     event.stopPropagation();
-    if (event.altKey || event.metaKey) {
-      if (STATE.drilledNodeId[which] === d.id) STATE.drilledNodeId[which] = null;
-      else STATE.drilledNodeId[which] = d.id;
-      render();
-      return;
+    if (STATE.drilledNodeId[which] === d.id) {
+      STATE.drilledNodeId[which] = null;
+      hideActionCard();
+    } else {
+      STATE.drilledNodeId[which] = d.id;
+      showActionCard(d, which);
     }
-    openArticles(d);
+    render();
   });
   node.on('dblclick', (event, d) => {
     event.stopPropagation();
@@ -1029,13 +1133,87 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
 }
 
 function nodeRadius(d) {
-  if (d.kind === 'audience') return 14;
-  return 5 + d.affinity * 12;
+  if (d.kind === 'audience') return 22;
+  // Exaggerated curve so high-affinity nodes are clearly larger than low.
+  // affinity 0.35 → ~7px ; 0.65 → ~17px ; 0.85 → ~26px ; 1.00 → ~34px
+  const a = Math.max(0, Math.min(1, d.affinity || 0));
+  return 5 + Math.pow(a, 1.6) * 30;
 }
 function textFor(d) {
   if (d.kind === 'audience') return d.label;
-  if (d.kind === 'reddit') return d.label; // subreddit only on label; sample shown on hover
-  return d.label;
+  const e = topicEmoji(d) ;
+  return (e ? e + '  ' : '') + d.label;
+}
+
+/* ── Topic → emoji ──────────────────────────────────────── */
+const TOPIC_EMOJI = {
+  // Fashion retail
+  'DTC margin compression': '📉', 'Resale & circular fashion': '♻️', 'AI try-on tech': '🪞',
+  'Tariff exposure 2026': '🏷️', 'Influencer ROI debates': '📣', 'Store fleet rationalization': '🏬',
+  'Gen Z brand loyalty': '👟', 'Wholesale vs DTC': '🤝', 'Inventory turn benchmarks': '📦',
+  'Founder mode essays': '✍️', 'Shopify Plus migrations': '🛒', 'Klaviyo email LTV': '📧',
+  'TikTok Shop attribution': '🎯', 'RFID & shrinkage': '🔖', 'Visual merch case studies': '👗',
+  'Returns automation': '↩️', 'Influencer contract terms': '📝', 'POS unification': '💳',
+  '3PL vs in-house': '🚚', 'CRO experiments': '🧪',
+  // Food & beverage
+  'Cold-chain economics': '❄️', 'Private label threats': '🏷️', 'GLP-1 demand shock': '💉',
+  'Plant-based reset': '🌱', 'Ghost kitchen ROI': '👻', 'Commodity hedging': '🛡️',
+  'Restaurant M&A': '🍴', 'Chick-fil-A culture': '🐔', 'Loyalty program math': '🎟️',
+  'Tip credit policy': '💰', 'POS upgrades': '💳', 'Off-prem revenue': '🥡',
+  'Coffee SKU rationalization': '☕', '3PD economics': '🏍️', 'Menu engineering': '📋',
+  'Local sourcing claims': '🚜', 'Refrigeration energy': '⚡', 'Catering channel': '🍽️',
+  'Franchisee NPS': '🤝', 'Labor scheduling AI': '⏰',
+  // Professional services
+  'Billable hour twilight': '⏳', 'AI co-pilot pricing': '🤖', 'Big-4 carve-outs': '🏢',
+  'Partner comp': '💸', 'GenAI utilization': '🧠', 'Bench investment': '🪑',
+  'Geopolitical risk briefs': '🌍', 'Diversity reporting': '📊', 'PE roll-ups': '🎯',
+  'Lateral hire premiums': '↔️',
+  // Health & wellness
+  'GLP-1 channel shift': '💉', 'Telehealth retention': '📱', 'Med-spa M&A': '💆',
+  'PE in dermatology': '🏥', 'Wearable data ROI': '⌚', 'Insurance pre-auth AI': '📋',
+  'Functional supplements': '💊', 'Wellness influencer claims': '💪', 'CGM for non-diabetics': '🩸',
+  'Recovery & sleep tech': '😴',
+  // Home services
+  'Roll-up economics': '🔧', 'Field tech supply': '🛠️', 'Private equity HVAC': '🌡️',
+  'SEO collapse': '🔍', 'Yelp vs Google reviews': '⭐', 'Subscription model tests': '🔁',
+  'Truck rolls AI': '🚛', 'Apprentice pipelines': '🎓', 'Insurance work mix': '📋',
+  'Pricing transparency': '💲',
+  // SaaS / tech
+  'PLG vs sales-led': '🚀', 'Rule of 40 in 2026': '📈', 'AI cost gross margin': '💰',
+  'Vibe coding ops': '🎧', 'Series B drought': '🏜️', 'RIF playbooks': '✂️',
+  'GTM compression': '🎯', 'PMF re-finding': '🧭', 'Multi-product expansion': '🧩',
+  'Founder/CEO transitions': '👔', 'PLG attribution': '🎯', 'RevOps stack': '⚙️',
+  'Outbound dead?': '📞', 'SDR-as-service': '💼', 'Demand-gen efficiency': '📊',
+  'Cohort gross retention': '🔒', 'Pricing pages A/B': '🅰️', 'Onboarding time-to-value': '⏱️',
+  'Partner-led growth': '🤝', 'Field marketing ROI': '🎪',
+  // Default
+  'Hiring freeze tactics': '🧊', 'AI productivity studies': '📈', 'Q3 earnings reads': '📰',
+  'Remote work data': '🏠', 'SMB lending shifts': '🏦', 'Founder fatigue': '😩',
+  'Pricing experiments': '💲', 'Talent density': '🧬', 'Board management': '🗂️',
+  'Year-end planning': '📅',
+};
+const SUB_EMOJI = {
+  'r/malefashionadvice': '👔', 'r/femalefashionadvice': '👗', 'r/AskNYC': '🗽',
+  'r/FrugalMaleFashion': '🛍️', 'r/Watches': '⌚', 'r/Sneakers': '👟',
+  'r/wine': '🍷', 'r/HENRYfinance': '💼', 'r/Padel': '🎾', 'r/F1': '🏎️',
+  'r/restaurateur': '🍽️', 'r/AskCulinary': '👨‍🍳', 'r/winemaking': '🍇',
+  'r/GLP1': '💉', 'r/Coffee': '☕', 'r/tennis': '🎾', 'r/golf': '⛳',
+  'r/woodworking': '🪵', 'r/Lawyers': '⚖️', 'r/consulting': '📊',
+  'r/AskHistorians': '📜', 'r/Skiing': '⛷️', 'r/Skincareaddiction': '🧴',
+  'r/peloton': '🚴', 'r/running': '🏃', 'r/Supplements': '💊',
+  'r/CGM': '🩸', 'r/sleep': '😴', 'r/HVAC': '❄️', 'r/Plumbing': '🔧',
+  'r/HomeImprovement': '🏠', 'r/SmallBusiness': '🏪', 'r/Trucks': '🚛',
+  'r/ChatGPTPro': '🤖', 'r/RPGamers': '🎮', 'r/MechanicalKeyboards': '⌨️',
+  'r/podcasts': '🎙️', 'r/personalfinance': '💵', 'r/CrossFit': '🏋️',
+  'r/dadjokes': '😄', 'r/AskMen': '👤', 'r/Frugal': '💰',
+  'r/Cooking': '🍳', 'r/houseplants': '🌿', 'r/travel': '✈️',
+};
+function topicEmoji(d) {
+  if (!d) return '';
+  if (d.kind === 'reddit') return SUB_EMOJI[d.label] || '💬';
+  // Strip drill-down suffix
+  const base = (d.label || '').split(' · ')[0].trim();
+  return TOPIC_EMOJI[base] || (d.kind === 'linkedin' ? '🔷' : '');
 }
 
 /* ── Render: one panel for a filter set ─────────────────── */
@@ -1127,9 +1305,10 @@ function showHover(event, d) {
   const platform = d.kind === 'linkedin' ? 'LinkedIn' : d.kind === 'reddit' ? 'Reddit' : 'Audience';
   const score = d.affinity;
   const sample = d.sample || (d.sublabel ? `${d.sublabel}` : '');
+  const emoji = topicEmoji(d);
   HC.innerHTML = `
     <div class="hc-label">${platform}${d.sublabel && d.kind === 'reddit' ? ' · ' + d.label : ''}</div>
-    <div class="hc-name">${d.kind === 'reddit' && d.sublabel ? d.sublabel : d.label}</div>
+    <div class="hc-name">${emoji ? emoji + ' ' : ''}${d.kind === 'reddit' && d.sublabel ? d.sublabel : d.label}</div>
     <div class="hc-affinity">
       <div class="hc-bar"><i style="width:${(score * 100).toFixed(0)}%"></i></div>
       <span class="hc-score">${score.toFixed(2)}</span>
@@ -1229,6 +1408,13 @@ function renderGraphPanel(panelEl, svgEl) {
   const label = panelEl.querySelector('.panel-label');
   if (label) label.textContent = `Network · all audiences × all content`;
 
+  svg.append('rect')
+    .attr('class', 'pan-catcher')
+    .attr('x', 0).attr('y', 0)
+    .attr('width', w).attr('height', h)
+    .attr('fill', 'transparent')
+    .style('cursor', 'grab')
+    .style('pointer-events', 'all');
   const zoomLayer = svg.append('g').attr('class', 'zoom-layer');
   const link = zoomLayer.append('g').attr('class', 'links').selectAll('line')
     .data(links).join('line').attr('class', 'link')
@@ -1436,6 +1622,41 @@ function toast(msg) {
   toastTimer = setTimeout(() => TOAST.classList.remove('show'), 1500);
 }
 
+/* ── Action card (per-node click) ───────────────────────── */
+const ACTION = {
+  card: document.getElementById('actionCard'),
+  eyebrow: document.getElementById('acEyebrow'),
+  platform: document.getElementById('acPlatform'),
+  title: document.getElementById('acTitle'),
+  articles: document.getElementById('acArticles'),
+  close: document.getElementById('acClose'),
+  active: null, // { node, which }
+};
+function showActionCard(d, which) {
+  ACTION.active = { node: d, which };
+  ACTION.eyebrow.classList.remove('linkedin','reddit');
+  ACTION.eyebrow.classList.add(d.kind);
+  ACTION.platform.textContent = d.kind === 'linkedin' ? 'LinkedIn topic' : d.kind === 'reddit' ? 'Reddit community' : 'Topic';
+  const emoji = topicEmoji(d);
+  const name = d.kind === 'reddit' && d.sublabel ? `${d.label} · ${d.sublabel}` : d.label;
+  ACTION.title.textContent = (emoji ? emoji + '  ' : '') + name;
+  ACTION.card.classList.add('show');
+}
+function hideActionCard() {
+  ACTION.card.classList.remove('show');
+  ACTION.active = null;
+}
+ACTION.close.addEventListener('click', () => {
+  if (ACTION.active) {
+    STATE.drilledNodeId[ACTION.active.which] = null;
+    hideActionCard();
+    render();
+  }
+});
+ACTION.articles.addEventListener('click', () => {
+  if (ACTION.active) openArticles(ACTION.active.node);
+});
+
 /* ── Articles modal ─────────────────────────────────────── */
 // Pre-curated real articles for high-frequency topics. URL = real article.
 const CURATED_ARTICLES = {
@@ -1548,7 +1769,9 @@ const AM = {
 function openArticles(node) {
   const platform = node.kind === 'linkedin' ? 'LinkedIn topic' : node.kind === 'reddit' ? 'Reddit community' : 'Topic';
   AM.eyebrow.textContent = platform;
-  AM.title.textContent = node.kind === 'reddit' && node.sublabel ? `${node.label} · ${node.sublabel}` : node.label;
+  const emoji = topicEmoji(node);
+  const name = node.kind === 'reddit' && node.sublabel ? `${node.label} · ${node.sublabel}` : node.label;
+  AM.title.textContent = (emoji ? emoji + '  ' : '') + name;
   const list = articlesFor(node);
   AM.list.innerHTML = list.map(a =>
     `<a class="article" href="${a.url}" target="_blank" rel="noopener">
@@ -1576,10 +1799,13 @@ function init() {
   initSelects('setA', STATE.filters.A);
   initSelects('setB', STATE.filters.B);
   setMode(STATE.mode);
-  // Click on empty stage clears drill
-  document.getElementById('stage').addEventListener('click', () => {
+  // Click on empty stage clears drill + hides action card
+  document.getElementById('stage').addEventListener('click', e => {
+    // Don't clear if user clicked inside the action card or legend or zoom controls
+    if (e.target.closest('.action-card,.legend,.zoom-controls')) return;
     if (STATE.drilledNodeId.A || STATE.drilledNodeId.B) {
       STATE.drilledNodeId = { A: null, B: null };
+      hideActionCard();
       render();
     }
   });
