@@ -480,6 +480,31 @@
     z-index: 6; min-width: 240px;
     box-shadow: var(--shadow-soft), var(--rim);
     font-size: 11px;
+    cursor: pointer;
+    transition: width .3s ease, min-width .3s ease, padding .3s ease, border-radius .3s ease;
+  }
+  .legend.collapsed {
+    min-width: 0;
+    padding: 8px 12px;
+    border-radius: 999px;
+  }
+  .legend.collapsed .legend-title,
+  .legend.collapsed .legend-row,
+  .legend.collapsed .legend-affinity { display: none; }
+  .legend-pill {
+    display: none;
+    align-items: center; gap: 6px;
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-2); font-weight: 600;
+    white-space: nowrap;
+  }
+  .legend.collapsed .legend-pill { display: inline-flex; }
+  .legend-pill::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--linkedin);
+    box-shadow:
+      8px 0 0 var(--reddit),
+      16px 0 0 var(--gold);
   }
   .legend-title {
     font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
@@ -1056,7 +1081,8 @@
     <div class="panel-label" id="labelA"></div>
     <svg class="constellation" id="svgA"></svg>
   </div>
-  <div class="legend" id="legend">
+  <div class="legend" id="legend" title="Click to expand / collapse legend">
+    <span class="legend-pill">Legend &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     <div class="legend-title">Legend</div>
     <div class="legend-row"><span class="legend-dot aud"></span><b>Audience</b><span>target segment (center)</span></div>
     <div class="legend-row"><span class="legend-dot li"></span><b>LinkedIn</b><span>business topic</span></div>
@@ -2337,6 +2363,20 @@ document.getElementById('personaToggle')?.addEventListener('click', () => {
   const card = document.getElementById('personaCard');
   card.classList.toggle('hidden', STATE.personaCollapsed);
 });
+
+// Legend: shows expanded on load, auto-collapses after 5s; click toggles.
+(function () {
+  const legend = document.getElementById('legend');
+  if (!legend) return;
+  let timer = setTimeout(() => legend.classList.add('collapsed'), 5000);
+  legend.addEventListener('click', () => {
+    legend.classList.toggle('collapsed');
+    if (timer) { clearTimeout(timer); timer = null; }
+  });
+  legend.addEventListener('mouseenter', () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+  });
+})();
 
 /* ── Bridges (LinkedIn ↔ Reddit semantic links) ──────────── */
 const BRIDGES = {
