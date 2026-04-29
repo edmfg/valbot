@@ -27,6 +27,8 @@
     color: var(--ink);
     background: var(--bg);
     -webkit-font-smoothing: antialiased;
+    display: flex; flex-direction: column;
+    min-height: 100vh;
   }
   button, select, textarea, input {
     font: inherit;
@@ -108,9 +110,11 @@
   select:focus { outline: 0; border-color: var(--ink); }
 
   /* ── Stage ──────────────────────────────────────── */
+  header, .filters, footer { flex-shrink: 0; }
   .stage {
     position: relative;
-    height: calc(100vh - 156px);
+    flex: 1 1 auto;
+    min-height: 0;
     background: var(--paper);
     overflow: hidden;
   }
@@ -688,17 +692,19 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
   });
 
   const minDim = Math.min(width, height);
-  const baseDist = minDim * 0.18;
-  const distSpread = minDim * 0.30;
+  const maxDim = Math.max(width, height);
+  // Use the larger dimension to set link distance so nodes reach the edges of wide canvases
+  const baseDist = maxDim * 0.16;
+  const distSpread = maxDim * 0.32;
   const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(d => baseDist + (1 - d.affinity) * distSpread).strength(0.55))
-    .force('charge', d3.forceManyBody().strength(-Math.max(450, minDim * 0.7)))
-    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
-    .force('x', d3.forceX(width / 2).strength(0.04))
-    .force('y', d3.forceY(height / 2).strength(0.04))
-    .force('collide', d3.forceCollide().radius(d => nodeRadius(d) + 22))
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => baseDist + (1 - d.affinity) * distSpread).strength(0.4))
+    .force('charge', d3.forceManyBody().strength(-Math.max(1400, maxDim * 1.0)).distanceMax(maxDim * 0.7))
+    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.03))
+    .force('x', d3.forceX(width / 2).strength(0.012))
+    .force('y', d3.forceY(height / 2).strength(0.025))
+    .force('collide', d3.forceCollide().radius(d => nodeRadius(d) + 28))
     .alpha(1)
-    .alphaDecay(0.035)
+    .alphaDecay(0.025)
     .on('tick', () => {
       link
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
@@ -916,14 +922,14 @@ function renderGraphPanel(panelEl, svgEl) {
     .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); });
   node.call(drag);
 
-  const minDim = Math.min(w, h);
+  const maxDim = Math.max(w, h);
   const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(d => minDim * 0.10 + (1 - d.affinity) * minDim * 0.28).strength(0.4))
-    .force('charge', d3.forceManyBody().strength(-Math.max(220, minDim * 0.45)))
-    .force('center', d3.forceCenter(w / 2, h / 2).strength(0.04))
-    .force('x', d3.forceX(w / 2).strength(0.03))
-    .force('y', d3.forceY(h / 2).strength(0.03))
-    .force('collide', d3.forceCollide().radius(d => (d.kind === 'audience' ? 18 : nodeRadius(d) + 12)))
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => maxDim * 0.10 + (1 - d.affinity) * maxDim * 0.30).strength(0.3))
+    .force('charge', d3.forceManyBody().strength(-Math.max(700, maxDim * 0.6)).distanceMax(maxDim * 0.7))
+    .force('center', d3.forceCenter(w / 2, h / 2).strength(0.025))
+    .force('x', d3.forceX(w / 2).strength(0.012))
+    .force('y', d3.forceY(h / 2).strength(0.022))
+    .force('collide', d3.forceCollide().radius(d => (d.kind === 'audience' ? 22 : nodeRadius(d) + 16)))
     .on('tick', () => {
       link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
           .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
@@ -1087,7 +1093,8 @@ function init() {
   // Keep URL in sync after each render
   const _render = render;
   window.render = function () { _render(); encodeUrl(); };
-  window.render();
+  // Wait for layout so flex panel has a real width/height before D3 measures
+  requestAnimationFrame(() => requestAnimationFrame(window.render));
 }
 init();
 </script>
