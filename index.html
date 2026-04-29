@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Orbit · v0.1</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='5' fill='%23222'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23222' stroke-width='0.6'/%3E%3Ccircle cx='28' cy='16' r='2' fill='%23185fa5'/%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  :root {
+    --ink: #111;
+    --ink-2: #555;
+    --ink-3: #888;
+    --line: #e8e8e8;
+    --line-2: #ddd;
+    --bg: #fafafa;
+    --paper: #fff;
+    --linkedin: #185fa5;
+    --reddit: #d85a30;
+    --audience: #222;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font: 400 14px/1.45 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  button, select, textarea, input {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 18px 24px 14px;
+    background: var(--paper);
+    border-bottom: 0.5px solid var(--line);
+  }
+  .brand {
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .brand-name {
+    font-weight: 500; font-size: 14px; letter-spacing: 0.04em;
+  }
+  .brand-version { color: var(--ink-3); font-size: 12px; }
+  .brand-tag { color: var(--ink-2); font-size: 12px; margin-left: 16px; }
+  .actions { display: flex; gap: 4px; align-items: center; }
+  .seg {
+    display: inline-flex;
+    border: 0.5px solid var(--line-2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-right: 8px;
+  }
+  .seg button {
+    background: var(--paper);
+    border: 0; padding: 6px 12px;
+    cursor: pointer; color: var(--ink-2);
+    font-size: 12px; letter-spacing: 0.02em;
+    border-right: 0.5px solid var(--line-2);
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button.active { background: var(--ink); color: #fff; }
+  .seg button:hover:not(.active) { color: var(--ink); }
+  .icon-btn {
+    background: var(--paper); border: 0.5px solid var(--line-2);
+    padding: 6px 12px; cursor: pointer;
+    border-radius: 4px; color: var(--ink-2); font-size: 12px;
+  }
+  .icon-btn:hover { color: var(--ink); }
+
+  /* ── Filter row ─────────────────────────────────── */
+  .filters {
+    display: flex; gap: 8px; padding: 12px 24px;
+    background: var(--paper);
+    border-bottom: 0.5px solid var(--line);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-set { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .filter-set + .filter-set { padding-left: 16px; border-left: 0.5px solid var(--line); }
+  .set-label {
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); padding-right: 6px;
+  }
+  .field {
+    display: inline-flex; flex-direction: column;
+  }
+  .field label {
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 2px;
+  }
+  select {
+    appearance: none; -webkit-appearance: none;
+    background: var(--paper) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1'/></svg>") no-repeat right 8px center;
+    border: 0.5px solid var(--line-2);
+    border-radius: 4px;
+    padding: 6px 24px 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    min-width: 140px;
+  }
+  select:hover { border-color: var(--ink-3); }
+  select:focus { outline: 0; border-color: var(--ink); }
+
+  /* ── Stage ──────────────────────────────────────── */
+  .stage {
+    position: relative;
+    height: calc(100vh - 156px);
+    background: var(--paper);
+    overflow: hidden;
+  }
+  .stage.compare {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border-top: 0.5px solid var(--line);
+  }
+  .stage.compare .panel + .panel { border-left: 0.5px solid var(--line); }
+  .panel { position: relative; overflow: hidden; }
+  .panel-label {
+    position: absolute; top: 12px; left: 16px;
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); pointer-events: none;
+  }
+  svg.constellation {
+    width: 100%; height: 100%; display: block;
+    cursor: grab;
+  }
+  svg.constellation:active { cursor: grabbing; }
+  .link { stroke: var(--ink); stroke-opacity: 0.18; }
+  .node circle { cursor: pointer; transition: stroke-width .15s ease, r .35s ease; }
+  .node text {
+    font-size: 11px; pointer-events: none; user-select: none;
+    fill: var(--ink-2);
+  }
+  .node.audience text { fill: var(--ink); font-weight: 500; }
+  .node.linkedin circle { fill: var(--linkedin); }
+  .node.reddit circle { fill: var(--reddit); }
+  .node.audience circle { fill: var(--audience); }
+  .node circle:hover { stroke: var(--ink); stroke-width: 2; }
+  .pulse {
+    fill: var(--audience);
+    animation: pulse 2.2s ease-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+    pointer-events: none;
+  }
+  @keyframes pulse {
+    0% { opacity: 0.35; transform: scale(1); }
+    100% { opacity: 0; transform: scale(2.2); }
+  }
+
+  /* ── Hover preview card ─────────────────────────── */
+  .hovercard {
+    position: absolute; pointer-events: none;
+    background: var(--paper); border: 0.5px solid var(--line-2);
+    border-radius: 6px; padding: 10px 14px; min-width: 220px; max-width: 280px;
+    font-size: 12px; box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    opacity: 0; transition: opacity .12s ease;
+    z-index: 5;
+  }
+  .hovercard.show { opacity: 1; }
+  .hc-label {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 4px;
+  }
+  .hc-name { font-weight: 500; margin-bottom: 6px; }
+  .hc-affinity {
+    display: flex; gap: 4px; align-items: baseline; margin-bottom: 6px;
+  }
+  .hc-bar {
+    flex: 1; height: 3px; background: var(--line); border-radius: 2px;
+    overflow: hidden;
+  }
+  .hc-bar i { display: block; height: 100%; background: var(--ink); }
+  .hc-score { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .hc-sample { color: var(--ink-2); font-size: 11px; line-height: 1.4; }
+
+  /* ── Footer ─────────────────────────────────────── */
+  footer {
+    padding: 8px 24px;
+    background: var(--paper);
+    border-top: 0.5px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em;
+  }
+  footer span + span { margin-left: 16px; }
+  .crumbs { color: var(--ink-2); font-size: 11px; }
+  .crumbs em { font-style: normal; color: var(--ink); margin: 0 4px; }
+  .breadcrumb-btn {
+    background: none; border: 0; cursor: pointer;
+    color: var(--ink-3); font-size: 11px; padding: 0 4px;
+  }
+  .breadcrumb-btn:hover { color: var(--ink); }
+
+  /* ── Notes drawer ───────────────────────────────── */
+  .notes-drawer {
+    position: fixed; right: 0; top: 0; bottom: 0;
+    width: 360px;
+    background: var(--paper);
+    border-left: 0.5px solid var(--line);
+    transform: translateX(100%);
+    transition: transform .25s ease;
+    display: flex; flex-direction: column;
+    z-index: 20;
+  }
+  .notes-drawer.open { transform: translateX(0); }
+  .notes-head {
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .notes-title { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+  .notes-close { background: 0; border: 0; cursor: pointer; font-size: 16px; color: var(--ink-3); }
+  .notes-close:hover { color: var(--ink); }
+  textarea.notes {
+    flex: 1; border: 0; padding: 14px 16px;
+    font: 400 13px/1.55 'Inter', sans-serif;
+    color: var(--ink); resize: none; outline: 0;
+    background: var(--paper);
+  }
+  .notes-help {
+    padding: 8px 16px; border-top: 0.5px solid var(--line);
+    font-size: 10px; color: var(--ink-3); letter-spacing: 0.04em;
+  }
+
+  /* ── Toast ──────────────────────────────────────── */
+  .toast {
+    position: fixed; left: 50%; bottom: 36px; transform: translate(-50%, 20px);
+    background: var(--ink); color: #fff;
+    padding: 10px 16px; border-radius: 4px;
+    font-size: 12px; opacity: 0;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 30; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ── Compare overlap badge ──────────────────────── */
+  .overlap-ring {
+    fill: none; stroke: var(--ink); stroke-dasharray: 2 3; stroke-width: 0.8; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-name">ORBIT</span>
+    <span class="brand-version">· v0.1</span>
+    <span class="brand-tag">Audience constellation · Google B2B SMB prototype</span>
+  </div>
+  <div class="actions">
+    <div class="seg" id="modeSeg">
+      <button data-mode="filter" class="active">Filter</button>
+      <button data-mode="graph">Graph</button>
+      <button data-mode="compare">Compare</button>
+    </div>
+    <button class="icon-btn" id="exportBtn" title="Download PNG">Export</button>
+    <button class="icon-btn" id="notesBtn" title="Open notes">Notes</button>
+    <button class="icon-btn" id="resetBtn" title="Re-run simulation">Reset orbit</button>
+  </div>
+</header>
+
+<div class="filters" id="filtersRow">
+  <div class="filter-set" id="setA">
+    <span class="set-label" data-only="compare">Set A</span>
+    <div class="field"><label>Seniority</label>
+      <select data-key="seniority"></select></div>
+    <div class="field"><label>Sector</label>
+      <select data-key="sector"></select></div>
+    <div class="field"><label>Company size</label>
+      <select data-key="size"></select></div>
+    <div class="field"><label>Region</label>
+      <select data-key="region"></select></div>
+  </div>
+  <div class="filter-set" id="setB" style="display:none">
+    <span class="set-label">Set B</span>
+    <div class="field"><label>Seniority</label>
+      <select data-key="seniority"></select></div>
+    <div class="field"><label>Sector</label>
+      <select data-key="sector"></select></div>
+    <div class="field"><label>Company size</label>
+      <select data-key="size"></select></div>
+    <div class="field"><label>Region</label>
+      <select data-key="region"></select></div>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="panel" id="panelA">
+    <div class="panel-label" id="labelA"></div>
+    <svg class="constellation" id="svgA"></svg>
+  </div>
+</div>
+
+<footer>
+  <span class="crumbs" id="crumbs">Hover · preview &nbsp; · &nbsp; Click · drill-down &nbsp; · &nbsp; Double-click · re-pivot &nbsp; · &nbsp; Drag · move</span>
+  <span id="meta"></span>
+</footer>
+
+<div class="hovercard" id="hovercard"></div>
+
+<aside class="notes-drawer" id="notes">
+  <div class="notes-head">
+    <span class="notes-title">Notes · pitch annotations</span>
+    <button class="notes-close" id="notesClose">×</button>
+  </div>
+  <textarea class="notes" id="notesArea" placeholder="Annotations, observations, follow-ups…"></textarea>
+  <div class="notes-help">In-memory only. Disappears on reload (by spec).</div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   Orbit · constellation prototype
+   Single-file vanilla JS + D3 v7. No build step.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Filter options ─────────────────────────────────────── */
+const FILTERS = {
+  seniority: ['C-suite', 'VP', 'Director', 'Manager', 'Founder'],
+  sector: ['Fashion retail', 'Food & beverage', 'Professional services', 'Health & wellness', 'Home services', 'SaaS / tech'],
+  size: ['1–10', '11–50', '51–200'],
+  region: ['US', 'EU', 'APAC'],
+};
+const DEFAULT_FILTER = { seniority: 'C-suite', sector: 'Fashion retail', size: '11–50', region: 'US' };
+
+/* ── Topic seed data ────────────────────────────────────── */
+const LINKEDIN_SEEDS = {
+  'Fashion retail|C-suite': [
+    'DTC margin compression','Resale & circular fashion','AI try-on tech',
+    'Tariff exposure 2026','Influencer ROI debates','Store fleet rationalization',
+    'Gen Z brand loyalty','Wholesale vs DTC','Inventory turn benchmarks','Founder mode essays'
+  ],
+  'Fashion retail|VP': [
+    'Shopify Plus migrations','Klaviyo email LTV','TikTok Shop attribution',
+    'RFID & shrinkage','Visual merch case studies','Returns automation',
+    'Influencer contract terms','POS unification','3PL vs in-house','CRO experiments'
+  ],
+  'Food & beverage|C-suite': [
+    'Cold-chain economics','Private label threats','GLP-1 demand shock',
+    'Plant-based reset','Ghost kitchen ROI','Commodity hedging',
+    'Restaurant M&A','Chick-fil-A culture','Loyalty program math','Tip credit policy'
+  ],
+  'Food & beverage|VP': [
+    'POS upgrades','Off-prem revenue','Coffee SKU rationalization','3PD economics',
+    'Menu engineering','Local sourcing claims','Refrigeration energy','Catering channel',
+    'Franchisee NPS','Labor scheduling AI'
+  ],
+  'Professional services|C-suite': [
+    'Billable hour twilight','AI co-pilot pricing','Big-4 carve-outs','Partner comp',
+    'GenAI utilization','Bench investment','Geopolitical risk briefs','Diversity reporting',
+    'PE roll-ups','Lateral hire premiums'
+  ],
+  'Health & wellness|C-suite': [
+    'GLP-1 channel shift','Telehealth retention','Med-spa M&A','PE in dermatology',
+    'Wearable data ROI','Insurance pre-auth AI','Functional supplements','Wellness influencer claims',
+    'CGM for non-diabetics','Recovery & sleep tech'
+  ],
+  'Home services|C-suite': [
+    'Roll-up economics','Field tech supply','Private equity HVAC','SEO collapse',
+    'Yelp vs Google reviews','Subscription model tests','Truck rolls AI','Apprentice pipelines',
+    'Insurance work mix','Pricing transparency'
+  ],
+  'SaaS / tech|C-suite': [
+    'PLG vs sales-led','Rule of 40 in 2026','AI cost gross margin',
+    'Vibe coding ops','Series B drought','RIF playbooks',
+    'GTM compression','PMF re-finding','Multi-product expansion','Founder/CEO transitions'
+  ],
+  'SaaS / tech|VP': [
+    'PLG attribution','RevOps stack','Outbound dead?','SDR-as-service',
+    'Demand-gen efficiency','Cohort gross retention','Pricing pages A/B',
+    'Onboarding time-to-value','Partner-led growth','Field marketing ROI'
+  ],
+  'default': [
+    'Hiring freeze tactics','AI productivity studies','Q3 earnings reads',
+    'Remote work data','SMB lending shifts','Founder fatigue',
+    'Pricing experiments','Talent density','Board management','Year-end planning'
+  ]
+};
+
+const REDDIT_SEEDS = {
+  'Fashion retail|C-suite': [
+    ['r/malefashionadvice','grail-hunting Saturday'],
+    ['r/femalefashionadvice','capsule wardrobe'],
+    ['r/AskNYC','best omakase under $200'],
+    ['r/FrugalMaleFashion','Aimé Leon Dore drop'],
+    ['r/Watches','Tudor BB58 vs GMT'],
+    ['r/Sneakers','Sambas dead?'],
+    ['r/wine','Burgundy 2022 thread'],
+    ['r/HENRYfinance','$1M HHI but feel poor'],
+    ['r/Padel','first racquet'],
+    ['r/F1','Verstappen contract drama']
+  ],
+  'Fashion retail|VP': [
+    ['r/FemaleFashionAdvice','interview wardrobe'],
+    ['r/sneakers','New Balance 530'],
+    ['r/Frugal','Black Friday'],
+    ['r/AskMen','first watch under $1k'],
+    ['r/podcasts','Acquired LVMH ep'],
+    ['r/Cooking','sourdough'],
+    ['r/houseplants','snake plant'],
+    ['r/HENRYfinance','HHI envy'],
+    ['r/travel','Lisbon long weekend'],
+    ['r/F1','Hamilton Ferrari']
+  ],
+  'Food & beverage|C-suite': [
+    ['r/restaurateur','tip pooling'],
+    ['r/AskCulinary','butcher cuts'],
+    ['r/winemaking','garage Cab'],
+    ['r/GLP1','Mounjaro side effects'],
+    ['r/Coffee','Eight Ounce vs Trade'],
+    ['r/HENRYfinance','school district cost'],
+    ['r/tennis','Sinner forehand'],
+    ['r/golf','LIV schedule'],
+    ['r/woodworking','Festool vs Mafell'],
+    ['r/F1','team radio']
+  ],
+  'Professional services|C-suite': [
+    ['r/Lawyers','partner track'],
+    ['r/consulting','MBB exit ops'],
+    ['r/HENRYfinance','VC carry tax'],
+    ['r/AskHistorians','Roman empire ops'],
+    ['r/F1','Adrian Newey'],
+    ['r/golf','Scotty Cameron'],
+    ['r/Watches','GS spring drive'],
+    ['r/Padel','Madrid open'],
+    ['r/Skiing','heli vs cat'],
+    ['r/AskNYC','best steak']
+  ],
+  'Health & wellness|C-suite': [
+    ['r/GLP1','Zepbound side effects'],
+    ['r/peloton','Bike+ vs Tread'],
+    ['r/Skincareaddiction','retinoids 30s'],
+    ['r/running','Boston qualifier'],
+    ['r/Supplements','creatine timing'],
+    ['r/CGM','Dexcom for non-diabetics'],
+    ['r/sleep','Whoop vs Oura'],
+    ['r/HENRYfinance','wellness budget'],
+    ['r/Padel','first racquet'],
+    ['r/F1','Sunday GP']
+  ],
+  'Home services|C-suite': [
+    ['r/HVAC','heat pump install'],
+    ['r/Plumbing','tankless water heaters'],
+    ['r/HomeImprovement','floor refinish'],
+    ['r/SmallBusiness','first hire'],
+    ['r/Trucks','F-150 vs Ram'],
+    ['r/golf','muni vs private'],
+    ['r/Coffee','La Marzocco home'],
+    ['r/F1','tire strategy'],
+    ['r/Frugal','grocery prices'],
+    ['r/PersonalFinance','HYSA arms race']
+  ],
+  'SaaS / tech|C-suite': [
+    ['r/ChatGPTPro','prompt libraries'],
+    ['r/AskHistorians','Roman empire ops'],
+    ['r/F1','Adrian Newey'],
+    ['r/golf','Scotty Cameron'],
+    ['r/HENRYfinance','VC carry tax'],
+    ['r/Padel','Madrid open'],
+    ['r/Watches','GS spring drive'],
+    ['r/winemaking','barrel selection'],
+    ['r/AskNYC','best steak'],
+    ['r/Skiing','heli vs cat']
+  ],
+  'SaaS / tech|VP': [
+    ['r/RPGamers','Switch 2 launch'],
+    ['r/MechanicalKeyboards','HHKB clones'],
+    ['r/F1','Sky vs ESPN'],
+    ['r/coffee','9bar setup'],
+    ['r/podcasts','Lex Fridman'],
+    ['r/personalfinance','backdoor Roth'],
+    ['r/golf','Trackman home'],
+    ['r/AskNYC','marathon training'],
+    ['r/CrossFit','22.4 strategy'],
+    ['r/dadjokes','dad-of-three']
+  ],
+  'default': [
+    ['r/personalfinance','HYSA arms race'],
+    ['r/AskMen','dating in 30s'],
+    ['r/Frugal','grocery prices'],
+    ['r/Cooking','Sunday roast'],
+    ['r/F1','Sunday GP'],
+    ['r/houseplants','overwatering'],
+    ['r/Sneakers','what to flip'],
+    ['r/HENRYfinance','feeling broke'],
+    ['r/podcasts','Acquired ep'],
+    ['r/travel','shoulder season']
+  ]
+};
+
+const SAMPLE_LINKEDIN = [
+  '“Margins down 320bps, what we changed in 90 days.”',
+  '“The era of free CAC is over. A playbook.”',
+  '“Why we killed our DTC channel.”',
+  '“Three slides from yesterday\'s board.”',
+  '“What the GLP-1 wave means for our category.”',
+  '“We just RIF\'d 12%. Here\'s what we learned.”',
+  '“Stop optimizing churn. Optimize re-acquisition.”',
+  '“If you\'re still chasing top-funnel, you\'re late.”',
+  '“The case for going back to wholesale.”',
+  '“A note on AI gross margin reality.”',
+];
+
+/* ── State ──────────────────────────────────────────────── */
+const STATE = {
+  mode: 'filter',
+  filters: { A: { ...DEFAULT_FILTER }, B: { ...DEFAULT_FILTER, sector: 'SaaS / tech' } },
+  drilledNodeId: { A: null, B: null }, // expanded children
+  pivotId: { A: null, B: null }, // re-pivot center
+  positions: { A: new Map(), B: new Map() }, // drag persistence
+  notes: '',
+};
+
+/* ── Deterministic PRNG ─────────────────────────────────── */
+function seedFor(f) {
+  const s = (f.seniority + f.sector + f.size + f.region);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h || 1;
+}
+function randFn(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+/* ── Build dataset for a filter ─────────────────────────── */
+function topicsFor(f) {
+  const key = `${f.sector}|${f.seniority}`;
+  const li = LINKEDIN_SEEDS[key] || LINKEDIN_SEEDS['default'];
+  const rd = REDDIT_SEEDS[key] || REDDIT_SEEDS['default'];
+  return { li, rd };
+}
+
+function affinityFor(f, kind, name, idx) {
+  // Deterministic score in a kind-specific range
+  const seed = seedFor(f) + name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const r = randFn(seed)();
+  if (kind === 'linkedin') return 0.55 + r * 0.45; // 0.55–1.00
+  return 0.35 + r * 0.55; // 0.35–0.90
+}
+
+function buildNodes(f) {
+  const { li, rd } = topicsFor(f);
+  const audience = {
+    id: 'aud',
+    kind: 'audience',
+    label: `${f.seniority} · ${f.sector}`,
+    sublabel: `${f.size} · ${f.region}`,
+    affinity: 1,
+  };
+  const liNodes = li.map((name, i) => ({
+    id: 'li:' + name,
+    kind: 'linkedin',
+    label: name,
+    affinity: affinityFor(f, 'linkedin', name, i),
+    sample: SAMPLE_LINKEDIN[(seedFor(f) + i) % SAMPLE_LINKEDIN.length],
+  }));
+  const rdNodes = rd.map(([sub, post], i) => ({
+    id: 'rd:' + sub + ':' + post,
+    kind: 'reddit',
+    label: sub,
+    sublabel: post,
+    affinity: affinityFor(f, 'reddit', sub + post, i),
+    sample: `“${post}”`,
+  }));
+  return { audience, items: [...liNodes, ...rdNodes] };
+}
+
+function buildSubTopics(parent, f) {
+  // Deterministic 3-5 child sub-topics for drill-down
+  const seed = seedFor(f) + parent.label.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const r = randFn(seed);
+  const count = 3 + Math.floor(r() * 3); // 3,4,5
+  const SUFFIXES = parent.kind === 'linkedin'
+    ? ['playbook', 'case study', 'cohort data', 'partner panel', '2026 outlook', 'Q&A thread', 'CFO take', 'CMO take']
+    : ['weekly recap', 'megathread', 'top of week', 'controversial', 'AMA', 'mod pick'];
+  const subs = [];
+  for (let i = 0; i < count; i++) {
+    const sx = SUFFIXES[Math.floor(r() * SUFFIXES.length)];
+    subs.push({
+      id: parent.id + '/sub:' + i,
+      kind: parent.kind,
+      label: parent.label.split(' ').slice(0, 3).join(' ') + ' · ' + sx,
+      affinity: 0.35 + r() * 0.6,
+      parent: parent.id,
+      sample: `“${sx} thread reactions”`,
+    });
+  }
+  return subs;
+}
+
+/* ── Initialise filter dropdowns ────────────────────────── */
+function initSelects(setId, fs) {
+  const root = document.getElementById(setId);
+  root.querySelectorAll('select').forEach(sel => {
+    const k = sel.dataset.key;
+    sel.innerHTML = FILTERS[k].map(o => `<option ${o === fs[k] ? 'selected' : ''}>${o}</option>`).join('');
+    sel.addEventListener('change', () => {
+      fs[k] = sel.value;
+      // Clear positions + drill state on filter change for that set
+      const which = setId === 'setA' ? 'A' : 'B';
+      STATE.positions[which].clear();
+      STATE.drilledNodeId[which] = null;
+      STATE.pivotId[which] = null;
+      render();
+    });
+  });
+}
+
+/* ── Force simulation per panel ─────────────────────────── */
+function makeSimulation(svgSel, width, height, nodes, links, which) {
+  const positions = STATE.positions[which];
+  // Restore persisted positions
+  nodes.forEach(n => {
+    const p = positions.get(n.id);
+    if (p) { n.x = p.x; n.y = p.y; n.fx = p.fx; n.fy = p.fy; }
+  });
+
+  const link = svgSel.append('g').attr('class', 'links').selectAll('line')
+    .data(links).join('line')
+    .attr('class', 'link')
+    .attr('stroke-width', d => Math.max(0.5, d.affinity * 2.4));
+
+  const node = svgSel.append('g').attr('class', 'nodes').selectAll('g.node')
+    .data(nodes, d => d.id).join('g')
+    .attr('class', d => 'node ' + d.kind);
+
+  node.filter(d => d.kind === 'audience')
+    .append('circle')
+      .attr('class', 'pulse')
+      .attr('r', 24);
+
+  node.append('circle')
+    .attr('r', d => nodeRadius(d))
+    .attr('stroke', 'transparent')
+    .attr('stroke-width', 0);
+
+  node.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => nodeRadius(d) + 12)
+    .text(d => textFor(d));
+
+  // Drag
+  const drag = d3.drag()
+    .on('start', (event, d) => {
+      if (!event.active) sim.alphaTarget(0.25).restart();
+      d.fx = d.x; d.fy = d.y;
+    })
+    .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+    .on('end', (event, d) => {
+      if (!event.active) sim.alphaTarget(0);
+      positions.set(d.id, { x: d.x, y: d.y, fx: d.fx, fy: d.fy });
+    });
+  node.call(drag);
+
+  // Hover
+  node.on('mouseenter', (event, d) => showHover(event, d))
+      .on('mousemove', moveHover)
+      .on('mouseleave', hideHover);
+
+  // Click to drill / dbl-click to pivot
+  node.on('click', (event, d) => {
+    if (d.kind === 'audience') return;
+    event.stopPropagation();
+    if (STATE.drilledNodeId[which] === d.id) STATE.drilledNodeId[which] = null;
+    else STATE.drilledNodeId[which] = d.id;
+    render();
+  });
+  node.on('dblclick', (event, d) => {
+    event.stopPropagation();
+    if (d.kind === 'audience') {
+      STATE.pivotId[which] = null;
+    } else {
+      STATE.pivotId[which] = d.id;
+    }
+    STATE.drilledNodeId[which] = null;
+    STATE.positions[which].clear();
+    render();
+  });
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 80 + (1 - d.affinity) * 220).strength(0.7))
+    .force('charge', d3.forceManyBody().strength(-180))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collide', d3.forceCollide().radius(d => nodeRadius(d) + 14))
+    .alpha(1)
+    .alphaDecay(0.04)
+    .on('tick', () => {
+      link
+        .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+
+  return sim;
+}
+
+function nodeRadius(d) {
+  if (d.kind === 'audience') return 14;
+  return 5 + d.affinity * 12;
+}
+function textFor(d) {
+  if (d.kind === 'audience') return d.label;
+  if (d.kind === 'reddit') return d.label; // subreddit only on label; sample shown on hover
+  return d.label;
+}
+
+/* ── Render: one panel for a filter set ─────────────────── */
+let SIMS = { A: null, B: null };
+function renderPanel(panelEl, svgEl, f, which) {
+  if (SIMS[which]) { SIMS[which].stop(); SIMS[which] = null; }
+  const svg = d3.select(svgEl);
+  svg.selectAll('*').remove();
+
+  const rect = svgEl.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+  if (w < 50 || h < 50) return;
+
+  // Build base nodes
+  let { audience, items } = buildNodes(f);
+
+  // Apply re-pivot: if pivotId set, that node becomes center; audience becomes satellite
+  let center = audience;
+  if (STATE.pivotId[which]) {
+    const pivoted = items.find(n => n.id === STATE.pivotId[which]);
+    if (pivoted) {
+      center = { ...pivoted, kind: 'audience', sublabel: 'pivot · ' + pivoted.kind };
+      // Replace in items: drop pivoted, add original audience as satellite
+      items = items.filter(n => n.id !== pivoted.id);
+      items.unshift({ ...audience, id: audience.id + ':sat', kind: 'linkedin', affinity: 0.6, label: audience.label });
+    }
+  }
+
+  // Drilled node → expand its children orbit
+  let extra = [];
+  if (STATE.drilledNodeId[which]) {
+    const parent = items.find(n => n.id === STATE.drilledNodeId[which]);
+    if (parent) extra = buildSubTopics(parent, f);
+  }
+
+  const nodes = [center, ...items, ...extra];
+  const links = items.map(n => ({ source: center.id, target: n.id, affinity: n.affinity }))
+    .concat(extra.map(s => ({ source: s.parent, target: s.id, affinity: s.affinity })));
+
+  // Pin center
+  center.fx = w / 2; center.fy = h / 2;
+
+  // Update panel label
+  const label = panelEl.querySelector('.panel-label');
+  if (label) label.textContent = `${f.seniority} · ${f.sector} · ${f.size} · ${f.region}`;
+
+  SIMS[which] = makeSimulation(svg, w, h, nodes, links, which);
+
+  // Compare-mode overlap rings
+  if (STATE.mode === 'compare' && which === 'A') decorateOverlap();
+}
+
+/* ── Compare overlap detection ──────────────────────────── */
+function decorateOverlap() {
+  // Compute label intersection
+  const a = buildNodes(STATE.filters.A).items.map(n => n.label);
+  const b = new Set(buildNodes(STATE.filters.B).items.map(n => n.label));
+  const overlaps = a.filter(l => b.has(l));
+  if (!overlaps.length) return;
+  ['A', 'B'].forEach(w => {
+    const svgEl = document.getElementById('svg' + w);
+    if (!svgEl) return;
+    const svg = d3.select(svgEl);
+    svg.selectAll('.node').each(function (d) {
+      if (overlaps.includes(d.label)) {
+        d3.select(this).insert('circle', 'circle')
+          .attr('class', 'overlap-ring')
+          .attr('r', nodeRadius(d) + 6);
+      }
+    });
+  });
+}
+
+/* ── Hover preview card ─────────────────────────────────── */
+const HC = document.getElementById('hovercard');
+function showHover(event, d) {
+  const platform = d.kind === 'linkedin' ? 'LinkedIn' : d.kind === 'reddit' ? 'Reddit' : 'Audience';
+  const score = d.affinity;
+  const sample = d.sample || (d.sublabel ? `${d.sublabel}` : '');
+  HC.innerHTML = `
+    <div class="hc-label">${platform}${d.sublabel && d.kind === 'reddit' ? ' · ' + d.label : ''}</div>
+    <div class="hc-name">${d.kind === 'reddit' && d.sublabel ? d.sublabel : d.label}</div>
+    <div class="hc-affinity">
+      <div class="hc-bar"><i style="width:${(score * 100).toFixed(0)}%"></i></div>
+      <span class="hc-score">${score.toFixed(2)}</span>
+    </div>
+    ${sample ? `<div class="hc-sample">${sample}</div>` : ''}
+  `;
+  HC.classList.add('show');
+  moveHover(event);
+}
+function moveHover(event) {
+  const pad = 14;
+  let x = event.clientX + pad, y = event.clientY + pad;
+  const r = HC.getBoundingClientRect();
+  if (x + r.width > window.innerWidth - 8) x = event.clientX - r.width - pad;
+  if (y + r.height > window.innerHeight - 8) y = event.clientY - r.height - pad;
+  HC.style.left = x + 'px'; HC.style.top = y + 'px';
+}
+function hideHover() { HC.classList.remove('show'); }
+
+/* ── Mode switching ─────────────────────────────────────── */
+function setMode(m) {
+  STATE.mode = m;
+  document.querySelectorAll('#modeSeg button').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === m));
+  const setB = document.getElementById('setB');
+  setB.style.display = m === 'compare' ? '' : 'none';
+  document.querySelectorAll('[data-only="compare"]').forEach(el => el.style.display = m === 'compare' ? '' : 'none');
+  // Stage layout
+  const stage = document.getElementById('stage');
+  stage.classList.toggle('compare', m === 'compare');
+  // Build/clear panel B
+  let panelB = document.getElementById('panelB');
+  if (m === 'compare') {
+    if (!panelB) {
+      panelB = document.createElement('div');
+      panelB.className = 'panel';
+      panelB.id = 'panelB';
+      panelB.innerHTML = '<div class="panel-label" id="labelB"></div><svg class="constellation" id="svgB"></svg>';
+      stage.appendChild(panelB);
+    }
+  } else if (panelB) {
+    panelB.remove();
+  }
+  // For graph mode, build a unified network in panel A
+  render();
+}
+
+/* ── Graph mode: union of audiences x topics ───────────── */
+function buildGraphNodes() {
+  // sample a handful of audiences across sector × seniority and connect their topic clouds
+  const SAMPLES = [
+    { seniority: 'C-suite', sector: 'Fashion retail' },
+    { seniority: 'C-suite', sector: 'Food & beverage' },
+    { seniority: 'C-suite', sector: 'SaaS / tech' },
+    { seniority: 'C-suite', sector: 'Health & wellness' },
+    { seniority: 'C-suite', sector: 'Professional services' },
+    { seniority: 'VP',      sector: 'Fashion retail' },
+    { seniority: 'VP',      sector: 'SaaS / tech' },
+  ];
+  const audiences = SAMPLES.map((s, i) => ({
+    id: 'aud:' + i,
+    kind: 'audience',
+    label: s.seniority + ' · ' + s.sector,
+    affinity: 1,
+  }));
+  const seenTopics = new Map();
+  const links = [];
+  SAMPLES.forEach((seedF, i) => {
+    const f = { ...DEFAULT_FILTER, ...seedF };
+    const { items } = buildNodes(f);
+    items.forEach(t => {
+      const key = (t.kind === 'reddit' ? 'rd:' : 'li:') + t.label;
+      if (!seenTopics.has(key)) {
+        seenTopics.set(key, { ...t, id: key, _refs: 0 });
+      }
+      const node = seenTopics.get(key);
+      node._refs += 1;
+      node.affinity = Math.max(node.affinity || 0, t.affinity);
+      links.push({ source: 'aud:' + i, target: key, affinity: t.affinity });
+    });
+  });
+  const topics = Array.from(seenTopics.values()).map(t => ({
+    ...t,
+    affinity: Math.min(1, 0.4 + t._refs * 0.12),
+  }));
+  return { nodes: [...audiences, ...topics], links };
+}
+
+function renderGraphPanel(panelEl, svgEl) {
+  if (SIMS.A) { SIMS.A.stop(); SIMS.A = null; }
+  const svg = d3.select(svgEl);
+  svg.selectAll('*').remove();
+  const rect = svgEl.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+  const { nodes, links } = buildGraphNodes();
+  const label = panelEl.querySelector('.panel-label');
+  if (label) label.textContent = `Network · all audiences × all content`;
+
+  const link = svg.append('g').attr('class', 'links').selectAll('line')
+    .data(links).join('line').attr('class', 'link')
+    .attr('stroke-width', d => 0.4 + d.affinity * 1.6);
+  const node = svg.append('g').attr('class', 'nodes').selectAll('g.node')
+    .data(nodes, d => d.id).join('g').attr('class', d => 'node ' + d.kind);
+  node.append('circle')
+    .attr('r', d => d.kind === 'audience' ? 12 : nodeRadius(d) - 1);
+  node.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => (d.kind === 'audience' ? 14 : nodeRadius(d) + 2) + 10)
+    .text(d => d.label);
+  node.on('mouseenter', (e, d) => showHover(e, d)).on('mousemove', moveHover).on('mouseleave', hideHover);
+
+  const drag = d3.drag()
+    .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
+    .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); });
+  node.call(drag);
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 60 + (1 - d.affinity) * 200).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(-90))
+    .force('center', d3.forceCenter(w / 2, h / 2))
+    .force('collide', d3.forceCollide().radius(d => (d.kind === 'audience' ? 14 : nodeRadius(d) + 6)))
+    .on('tick', () => {
+      link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+  SIMS.A = sim;
+}
+
+/* ── Top-level render ───────────────────────────────────── */
+function render() {
+  if (STATE.mode === 'graph') {
+    const panelA = document.getElementById('panelA');
+    renderGraphPanel(panelA, document.getElementById('svgA'));
+    return;
+  }
+  const panelA = document.getElementById('panelA');
+  renderPanel(panelA, document.getElementById('svgA'), STATE.filters.A, 'A');
+  if (STATE.mode === 'compare') {
+    const panelB = document.getElementById('panelB');
+    if (panelB) renderPanel(panelB, document.getElementById('svgB'), STATE.filters.B, 'B');
+  }
+  updateMeta();
+}
+
+function updateMeta() {
+  const f = STATE.filters.A;
+  const t = topicsFor(f);
+  document.getElementById('meta').textContent =
+    `${t.li.length} LinkedIn · ${t.rd.length} Reddit  ·  seed ${seedFor(f)}`;
+}
+
+/* ── Mode segmented control ─────────────────────────────── */
+document.querySelectorAll('#modeSeg button').forEach(b => {
+  b.addEventListener('click', () => setMode(b.dataset.mode));
+});
+
+/* ── Notes drawer ───────────────────────────────────────── */
+const notesDrawer = document.getElementById('notes');
+const notesArea = document.getElementById('notesArea');
+document.getElementById('notesBtn').addEventListener('click', () => {
+  notesDrawer.classList.add('open');
+  notesArea.focus();
+});
+document.getElementById('notesClose').addEventListener('click', () => notesDrawer.classList.remove('open'));
+notesArea.addEventListener('input', e => STATE.notes = e.target.value);
+
+/* ── Reset orbit ────────────────────────────────────────── */
+document.getElementById('resetBtn').addEventListener('click', () => {
+  STATE.positions.A.clear(); STATE.positions.B.clear();
+  STATE.drilledNodeId = { A: null, B: null };
+  STATE.pivotId = { A: null, B: null };
+  render();
+  toast('Orbit re-seeded');
+});
+
+/* ── Export PNG (SVG → canvas) ──────────────────────────── */
+function exportPng() {
+  const svgEl = document.getElementById('svgA');
+  const rect = svgEl.getBoundingClientRect();
+  const W = Math.round(rect.width * 2);
+  const H = Math.round(rect.height * 2);
+  // Inline computed styles so the rasterised SVG matches the screen
+  const clone = svgEl.cloneNode(true);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('width', rect.width);
+  clone.setAttribute('height', rect.height);
+  // Bake a white background rect at the back
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('width', '100%');
+  bg.setAttribute('height', '100%');
+  bg.setAttribute('fill', '#ffffff');
+  clone.insertBefore(bg, clone.firstChild);
+  // Embed minimal CSS for fonts/colors
+  const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  style.textContent = `
+    text { font: 400 11px Inter, sans-serif; fill: #555; }
+    .node.audience text { fill: #111; font-weight: 500; }
+    .node.linkedin circle { fill: ${getCssVar('--linkedin')}; }
+    .node.reddit circle { fill: ${getCssVar('--reddit')}; }
+    .node.audience circle { fill: ${getCssVar('--audience')}; }
+    .link { stroke: #111; stroke-opacity: 0.18; }
+    .pulse { display: none; }
+  `;
+  clone.insertBefore(style, clone.firstChild);
+
+  const xml = new XMLSerializer().serializeToString(clone);
+  const svg64 = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 0, 0, W, H);
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'orbit-' + Date.now() + '.png';
+    a.click();
+    toast('PNG exported');
+  };
+  img.onerror = () => toast('Export failed — try Chrome');
+  img.src = svg64;
+}
+function getCssVar(n) {
+  return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#000';
+}
+document.getElementById('exportBtn').addEventListener('click', exportPng);
+
+/* ── URL state (filter combo, mode) ─────────────────────── */
+function encodeUrl() {
+  const p = new URLSearchParams();
+  p.set('m', STATE.mode);
+  Object.entries(STATE.filters.A).forEach(([k, v]) => p.set('a_' + k, v));
+  if (STATE.mode === 'compare') {
+    Object.entries(STATE.filters.B).forEach(([k, v]) => p.set('b_' + k, v));
+  }
+  history.replaceState(null, '', '?' + p.toString());
+}
+function decodeUrl() {
+  const p = new URLSearchParams(location.search);
+  if (!p.toString()) return;
+  const m = p.get('m');
+  if (['filter', 'graph', 'compare'].includes(m)) STATE.mode = m;
+  ['seniority', 'sector', 'size', 'region'].forEach(k => {
+    const a = p.get('a_' + k); if (a && FILTERS[k].includes(a)) STATE.filters.A[k] = a;
+    const b = p.get('b_' + k); if (b && FILTERS[k].includes(b)) STATE.filters.B[k] = b;
+  });
+}
+
+/* ── Toast ──────────────────────────────────────────────── */
+const TOAST = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg) {
+  TOAST.textContent = msg;
+  TOAST.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => TOAST.classList.remove('show'), 1500);
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+function init() {
+  decodeUrl();
+  initSelects('setA', STATE.filters.A);
+  initSelects('setB', STATE.filters.B);
+  setMode(STATE.mode);
+  // Click on empty stage clears drill
+  document.getElementById('stage').addEventListener('click', () => {
+    if (STATE.drilledNodeId.A || STATE.drilledNodeId.B) {
+      STATE.drilledNodeId = { A: null, B: null };
+      render();
+    }
+  });
+  // Resize
+  let resizeT = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(render, 160);
+  });
+  // Keep URL in sync after each render
+  const _render = render;
+  window.render = function () { _render(); encodeUrl(); };
+  window.render();
+}
+init();
+</script>
+</body>
+</html>
