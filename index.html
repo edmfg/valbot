@@ -1497,9 +1497,15 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
 
   const link = zoomLayer.append('g').attr('class', 'links').selectAll('line')
     .data(links).join('line')
-    .attr('class', d => d.kind === 'bridge' ? 'bridge' : 'link')
-    .attr('stroke-width', d => d.kind === 'bridge' ? 1.6 : 0.4 + Math.pow(d.affinity || 0.5, 1.5) * 4.2)
-    .attr('stroke-opacity', d => d.kind === 'bridge' ? 0.6 : 0.10 + (d.affinity || 0.5) * 0.30);
+    .attr('class', 'link')
+    .attr('stroke-width', d => 0.4 + Math.pow(d.affinity || 0.5, 1.5) * 4.2)
+    .attr('stroke-opacity', d => 0.10 + (d.affinity || 0.5) * 0.30);
+
+  const bridgeLine = zoomLayer.append('g').attr('class', 'bridges').selectAll('line')
+    .data(bridges).join('line')
+    .attr('class', 'bridge');
+  // Build an id → node lookup so we can resolve bridge endpoints on each tick
+  const nodeById = new Map(nodes.map(n => [n.id, n]));
 
   const node = zoomLayer.append('g').attr('class', 'nodes').selectAll('g.node')
     .data(nodes, d => d.id).join('g')
@@ -1694,6 +1700,11 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
       node.attr('transform', d => `translate(${d.x},${d.y})`);
+      bridgeLine
+        .attr('x1', d => (nodeById.get(d.sourceId) || {}).x || 0)
+        .attr('y1', d => (nodeById.get(d.sourceId) || {}).y || 0)
+        .attr('x2', d => (nodeById.get(d.targetId) || {}).x || 0)
+        .attr('y2', d => (nodeById.get(d.targetId) || {}).y || 0);
     });
 
   // Reduced-motion: hard-stop the simulation after 4.5s of run-time so the
@@ -1837,10 +1848,16 @@ function renderPanel(panelEl, svgEl, f, which) {
   }
 
   const nodes = [center, ...items, ...extra];
-  const baseLinks = items.map(n => ({ source: center.id, target: n.id, affinity: n.affinity }))
+  // Force-driving links (audience → topic, parent → sub-topic). Each has an
+  // explicit affinity so forceLink distance is finite.
+  const links = items.map(n => ({ source: center.id, target: n.id, affinity: n.affinity }))
     .concat(extra.map(s => ({ source: s.parent, target: s.id, affinity: s.affinity })));
-  const bridges = bridgeLinksFor(items);
-  const links = baseLinks.concat(bridges);
+  // Visual-only "bridge" lines (LinkedIn ↔ Reddit semantic overlap). Computed
+  // on each tick from the real positions; excluded from forces so they can't
+  // poison the simulation with NaN distances.
+  const bridges = bridgeLinksFor(items).map(b => ({
+    sourceId: b.source, targetId: b.target,
+  }));
 
   // Pin center
   center.fx = w / 2; center.fy = h / 2;
