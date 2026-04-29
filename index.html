@@ -379,6 +379,74 @@
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+  /* ── Mobile responsive ──────────────────────────── */
+  @media (max-width: 900px) {
+    .brand-tag { display: none; }
+    header { padding: 12px 14px 10px; gap: 8px; flex-wrap: wrap; }
+    .actions { flex-wrap: wrap; gap: 4px; }
+    .icon-btn { padding: 5px 10px; font-size: 11px; }
+    .seg button { padding: 5px 10px; font-size: 11px; }
+    .filters { padding: 10px 14px; gap: 6px; }
+    .filter-set + .filter-set { padding-left: 8px; margin-left: 4px; }
+    .field { flex: 1 1 calc(50% - 6px); }
+    select { min-width: 100%; font-size: 12px; padding: 6px 22px 6px 10px; }
+
+    .persona-card { width: auto; left: 16px; right: 16px; top: auto; bottom: 76px; padding: 12px 14px 10px; }
+    .persona-archetype { font-size: 14px; }
+    .persona-portrait { font-size: 11.5px; }
+    .persona-stats { gap: 10px; }
+    .persona-stat-num { font-size: 14px; }
+
+    .quick-bar {
+      max-width: calc(100% - 32px);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .quick-btn { padding: 6px 9px; font-size: 11px; }
+    .quick-sep { display: none; }
+
+    .legend { right: 16px; bottom: 76px; left: auto; min-width: 160px; padding: 10px 12px; font-size: 10px; }
+    .legend-row { font-size: 10px; gap: 6px; padding: 2px 0; }
+    .legend-row b { min-width: 60px; }
+    .zoom-controls { bottom: 16px; right: 16px; flex-direction: row; }
+    .zoom-controls button { width: 32px; height: 32px; font-size: 13px; }
+
+    .palette { max-width: 92vw; }
+    .palette-input { padding: 12px 14px; font-size: 14px; }
+    .palette-item .pi-name { font-size: 12px; }
+
+    .modal { padding: 20px 22px; max-width: 92vw; }
+    .modal-title { font-size: 16px; }
+
+    .notes-drawer { width: 100vw; max-width: 100vw; }
+
+    .compare-toggle { left: 16px; transform: none; }
+
+    .heatmap-host { padding: 12px; }
+    .heatmap-wrap { min-width: 0; padding: 14px; }
+    .hm-col-label { height: 100px; font-size: 9px; }
+    .hm-row-label, .hm-cell { padding: 6px 6px; font-size: 10px; }
+  }
+  @media (max-width: 540px) {
+    .brand { font-size: 13px; }
+    .brand-version { display: none; }
+    /* Show only the segmented control + theme toggle in the header on phones */
+    .icon-btn:not(#themeBtn) { display: none; }
+
+    .filters { gap: 5px; padding: 8px 12px; }
+    .filter-set { width: 100%; padding-left: 0; border-left: 0; gap: 5px; }
+    .filter-set + .filter-set { padding-left: 0; margin-top: 4px; }
+    .field { flex: 1 1 calc(50% - 4px); }
+    select { font-size: 12px; }
+
+    .persona-card { left: 8px; right: 8px; bottom: 64px; padding: 10px 12px; }
+    .legend { display: none; } /* legend hidden on phones to declutter */
+    .quick-bar { top: 12px; left: 12px; right: 12px; }
+
+    .stage.compare { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    .stage.compare .panel + .panel { border-left: 0; border-top: 0.5px solid var(--line); }
+  }
+
   /* ── Compare overlap badge ──────────────────────── */
   .overlap-ring {
     fill: none; stroke: var(--ink); stroke-dasharray: 2 3; stroke-width: 0.8; pointer-events: none;
@@ -443,6 +511,257 @@
     box-shadow: var(--shadow-soft), var(--rim);
   }
   .zoom-controls button:hover { color: var(--ink); border-color: var(--ink-3); }
+
+  /* ── Persona card ───────────────────────────────── */
+  .persona-card {
+    position: absolute; top: 16px; right: 16px;
+    width: 320px;
+    background: var(--paper-solid);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(36px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(36px) saturate(var(--glass-saturate));
+    border: 0.5px solid var(--line-2);
+    border-radius: 16px;
+    padding: 16px 18px 14px;
+    z-index: 7;
+    box-shadow: var(--shadow-soft), var(--rim);
+    transition: transform .25s ease, opacity .25s ease;
+  }
+  .persona-card.hidden { opacity: 0; transform: translateX(12px) translateY(-6px); pointer-events: none; }
+  .persona-eyebrow {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; margin-bottom: 8px;
+  }
+  .persona-accent {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--persona-accent, var(--linkedin));
+    box-shadow: 0 0 10px var(--persona-accent, var(--linkedin));
+  }
+  .persona-archetype {
+    font-size: 17px; font-weight: 700; line-height: 1.25; margin-bottom: 8px;
+    background: linear-gradient(180deg, var(--ink) 60%, var(--ink-2) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .persona-portrait {
+    font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
+    font-weight: 500;
+  }
+  .persona-stats {
+    display: flex; gap: 14px; margin-top: 12px; padding-top: 10px;
+    border-top: 0.5px solid var(--line);
+  }
+  .persona-stat {
+    display: flex; flex-direction: column; gap: 1px; flex: 1;
+  }
+  .persona-stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .persona-stat-label {
+    font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600;
+  }
+  .persona-toggle {
+    position: absolute; top: 12px; right: 12px;
+    background: 0; border: 0; cursor: pointer;
+    color: var(--ink-3); font-size: 14px; line-height: 1;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: background .15s ease, color .15s ease;
+  }
+  .persona-toggle:hover { color: var(--ink); background: rgba(255,255,255,0.08); }
+  [data-theme="light"] .persona-toggle:hover { background: rgba(0,0,0,0.04); }
+
+  /* ── Search palette ─────────────────────────────── */
+  .palette-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(4,6,10,0.55);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    display: none; align-items: flex-start; justify-content: center;
+    z-index: 280; padding-top: 14vh;
+  }
+  .palette-backdrop.open { display: flex; }
+  .palette {
+    background: var(--paper-solid);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(40px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(40px) saturate(var(--glass-saturate));
+    border: 0.5px solid var(--line-2);
+    border-radius: 18px;
+    width: 100%; max-width: 540px;
+    box-shadow: var(--shadow-1), var(--rim);
+    overflow: hidden;
+  }
+  .palette-input {
+    width: 100%; border: 0; background: transparent; outline: 0;
+    padding: 16px 18px; font-size: 15px; font-weight: 500;
+    color: var(--ink);
+    border-bottom: 0.5px solid var(--line);
+  }
+  .palette-input::placeholder { color: var(--ink-3); }
+  .palette-list {
+    max-height: 50vh; overflow-y: auto; padding: 6px;
+  }
+  .palette-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 12px; border-radius: 10px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .palette-item:hover, .palette-item.active {
+    background: rgba(255,255,255,0.08);
+  }
+  [data-theme="light"] .palette-item:hover,
+  [data-theme="light"] .palette-item.active {
+    background: rgba(0,0,0,0.05);
+  }
+  .palette-item .pi-emoji { font-size: 16px; width: 20px; text-align: center; }
+  .palette-item .pi-name { flex: 1; font-size: 13px; font-weight: 500; }
+  .palette-item .pi-kind {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600;
+  }
+  .palette-foot {
+    border-top: 0.5px solid var(--line);
+    padding: 8px 14px;
+    font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600;
+    display: flex; gap: 14px;
+  }
+  .palette-foot kbd {
+    background: rgba(255,255,255,0.06); border: 0.5px solid var(--line-2);
+    border-radius: 4px; padding: 1px 5px; font-size: 10px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+    color: var(--ink-2);
+  }
+  [data-theme="light"] .palette-foot kbd { background: rgba(0,0,0,0.04); }
+
+  /* ── Histogram legend ───────────────────────────── */
+  .legend-histo {
+    display: flex; align-items: flex-end; gap: 2px; height: 28px;
+    margin-top: 6px;
+  }
+  .legend-histo-bar {
+    flex: 1;
+    background: linear-gradient(180deg, var(--linkedin), var(--reddit));
+    border-radius: 1px;
+    min-height: 2px;
+    opacity: 0.85;
+    transition: height .25s ease;
+  }
+  .legend-histo-axis {
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--ink-3); font-weight: 600;
+    letter-spacing: 0.04em; margin-top: 3px;
+  }
+
+  /* ── Bridge edges ───────────────────────────────── */
+  .bridge {
+    fill: none;
+    stroke: var(--gold, #f5c542);
+    stroke-width: 1.4;
+    stroke-dasharray: 4 3;
+    stroke-opacity: 0.55;
+    pointer-events: none;
+    animation: bridge-drift 30s linear infinite;
+  }
+  @keyframes bridge-drift {
+    to { stroke-dashoffset: -120; }
+  }
+  :root { --gold: #f5c542; }
+  [data-theme="light"] { --gold: #d6a300; }
+
+  /* ── Heatmap (compare alt view) ─────────────────── */
+  .heatmap-host {
+    position: absolute; inset: 0;
+    overflow: auto;
+    padding: 24px;
+  }
+  .heatmap-wrap {
+    background: var(--paper-solid);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(28px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(28px) saturate(var(--glass-saturate));
+    border: 0.5px solid var(--line-2);
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft), var(--rim);
+    padding: 18px 20px;
+    min-width: 720px;
+  }
+  .heatmap-title {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 700; margin-bottom: 14px;
+  }
+  .heatmap {
+    display: grid;
+    gap: 4px;
+  }
+  .hm-corner, .hm-row-label, .hm-col-label, .hm-cell {
+    padding: 8px 10px; border-radius: 6px;
+    font-size: 11px;
+  }
+  .hm-corner { color: transparent; }
+  .hm-col-label {
+    font-size: 10px; font-weight: 600;
+    color: var(--ink-2);
+    line-height: 1.2;
+    transform: rotate(-90deg);
+    transform-origin: 0 100%;
+    white-space: nowrap;
+    height: 130px;
+    display: flex; align-items: flex-end;
+    padding: 0 0 6px 6px;
+  }
+  .hm-row-label {
+    font-weight: 600; color: var(--ink);
+    display: flex; align-items: center;
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid var(--line);
+  }
+  [data-theme="light"] .hm-row-label { background: rgba(0,0,0,0.02); }
+  .hm-cell {
+    color: rgba(255,255,255,0.95);
+    font-weight: 600;
+    text-align: center;
+    border: 0.5px solid var(--line);
+    cursor: default;
+    transition: transform .12s ease;
+  }
+  .hm-cell:hover { transform: scale(1.05); z-index: 2; }
+  [data-theme="light"] .hm-cell { color: var(--ink); }
+
+  /* Compare mode sub-toggle */
+  .compare-toggle {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 8;
+    display: inline-flex; padding: 4px;
+    background: var(--paper-solid);
+    background-image: var(--highlight);
+    -webkit-backdrop-filter: blur(28px) saturate(var(--glass-saturate));
+    backdrop-filter: blur(28px) saturate(var(--glass-saturate));
+    border: 0.5px solid var(--line-2);
+    border-radius: 999px;
+    box-shadow: var(--shadow-soft), var(--rim);
+  }
+  .compare-toggle button {
+    background: transparent; border: 0;
+    padding: 6px 14px; border-radius: 999px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 12px; color: var(--ink-2);
+    cursor: pointer;
+  }
+  .compare-toggle button.active {
+    background: var(--ink); color: var(--bg-grad-2);
+  }
+  .compare-toggle button:hover:not(.active) {
+    background: rgba(255,255,255,0.08); color: var(--ink);
+  }
+  [data-theme="light"] .compare-toggle button:hover:not(.active) {
+    background: rgba(0,0,0,0.04);
+  }
 
   /* ── Quick-view toolbar ─────────────────────────── */
   .quick-bar {
@@ -722,13 +1041,33 @@
     <div class="legend-row"><span class="legend-dot li"></span><b>LinkedIn</b><span>business topic</span></div>
     <div class="legend-row"><span class="legend-dot rd"></span><b>Reddit</b><span>cultural / lifestyle context</span></div>
     <div class="legend-affinity">
-      <div>Affinity → distance from center, node size, line weight</div>
-      <div class="legend-bar">
-        <span class="dot1"></span><span class="dot2"></span><span class="dot3"></span>
-        <span style="margin-left:8px">low → high</span>
+      <div>Affinity distribution · this constellation</div>
+      <div class="legend-histo" id="legendHisto"></div>
+      <div class="legend-histo-axis"><span>0.35</span><span>1.00</span></div>
+    </div>
+  </div>
+  <div class="persona-card hidden" id="personaCard">
+    <button class="persona-toggle" id="personaToggle" title="Hide">−</button>
+    <div class="persona-eyebrow"><span class="persona-accent"></span><span>Audience persona</span></div>
+    <div class="persona-archetype" id="personaName">…</div>
+    <div class="persona-portrait" id="personaPortrait">…</div>
+    <div class="persona-stats">
+      <div class="persona-stat">
+        <span class="persona-stat-num" id="personaOrgs">—</span>
+        <span class="persona-stat-label">Orgs reachable</span>
+      </div>
+      <div class="persona-stat">
+        <span class="persona-stat-num" id="personaDM">—</span>
+        <span class="persona-stat-label">Decision-makers</span>
       </div>
     </div>
   </div>
+
+  <div class="compare-toggle" id="compareToggle" style="display:none">
+    <button data-cv="constellations" class="active">🔭 Constellations</button>
+    <button data-cv="heatmap">🟦 Heatmap</button>
+  </div>
+
   <div class="quick-bar" id="quickBar">
     <span class="quick-grip" title="Drag to move">⋮⋮</span>
     <button class="quick-btn" data-q="top3" title="Hide all but the 3 highest-affinity topics">⭐ Top 3</button>
@@ -755,6 +1094,18 @@
     <button id="zoomIn" title="Zoom in">+</button>
     <button id="zoomOut" title="Zoom out">−</button>
     <button id="zoomFit" title="Reset view">⤧</button>
+  </div>
+</div>
+
+<div class="palette-backdrop" id="paletteBackdrop">
+  <div class="palette" role="dialog" aria-modal="true">
+    <input class="palette-input" id="paletteInput" placeholder="Search topics, communities, sectors…" autocomplete="off" />
+    <div class="palette-list" id="paletteList"></div>
+    <div class="palette-foot">
+      <span><kbd>↑↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> open</span>
+      <span><kbd>esc</kbd> close</span>
+    </div>
   </div>
 </div>
 
@@ -996,6 +1347,8 @@ const STATE = {
   zoom: { A: { k: 1, x: 0, y: 0 }, B: { k: 1, x: 0, y: 0 } },
   stickies: { A: [], B: [] }, // [{ id, x, y, text }]
   notes: '',
+  personaCollapsed: false,
+  compareView: 'constellations', // 'constellations' | 'heatmap'
 };
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', STATE.theme === 'light' ? 'light' : 'dark');
@@ -1129,9 +1482,9 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
 
   const link = zoomLayer.append('g').attr('class', 'links').selectAll('line')
     .data(links).join('line')
-    .attr('class', 'link')
-    .attr('stroke-width', d => 0.4 + Math.pow(d.affinity || 0.5, 1.5) * 4.2)
-    .attr('stroke-opacity', d => 0.10 + (d.affinity || 0.5) * 0.30);
+    .attr('class', d => d.kind === 'bridge' ? 'bridge' : 'link')
+    .attr('stroke-width', d => d.kind === 'bridge' ? 1.6 : 0.4 + Math.pow(d.affinity || 0.5, 1.5) * 4.2)
+    .attr('stroke-opacity', d => d.kind === 'bridge' ? 0.6 : 0.10 + (d.affinity || 0.5) * 0.30);
 
   const node = zoomLayer.append('g').attr('class', 'nodes').selectAll('g.node')
     .data(nodes, d => d.id).join('g')
@@ -1193,15 +1546,25 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     window.addEventListener('blur', release, { once: true });
   });
 
+  // Sector accent for the audience halo
+  const sectorHue = SECTOR_META[STATE.filters[which]?.sector]?.hue;
+  if (sectorHue) {
+    svgSel.style('--audience-accent', sectorHue);
+  }
+
   node.filter(d => d.kind === 'audience')
     .append('circle')
       .attr('class', 'pulse')
-      .attr('r', 24);
+      .attr('r', 28)
+      .attr('fill', sectorHue || null);
 
   node.append('circle')
     .attr('r', d => nodeRadius(d))
     .attr('stroke', 'transparent')
-    .attr('stroke-width', 0);
+    .attr('stroke-width', 0)
+    .attr('style', d => d.kind === 'audience' && sectorHue
+      ? `filter: drop-shadow(0 0 18px ${sectorHue}aa)`
+      : null);
 
   node.append('text')
     .attr('text-anchor', 'middle')
@@ -1279,14 +1642,20 @@ function makeSimulation(svgSel, width, height, nodes, links, which) {
     .force('y', d3.forceY(height / 2).strength(0.02))
     .force('collide', d3.forceCollide().radius(d => nodeRadius(d) + 28))
     .alpha(1)
-    .alphaDecay(0.018)
-    .velocityDecay(0.35)
+    .alphaDecay(0.04)
+    .alphaMin(0.005)
+    .velocityDecay(0.4)
     .on('tick', () => {
       link
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
       node.attr('transform', d => `translate(${d.x},${d.y})`);
     });
+
+  // Reduced-motion: hard-stop the simulation after 4.5s of run-time so the
+  // canvas doesn't endlessly jitter. User drag can still kick it back via
+  // the existing drag-restart handler.
+  setTimeout(() => { try { sim.stop(); } catch {} }, 4500);
 
   return sim;
 }
@@ -1424,8 +1793,10 @@ function renderPanel(panelEl, svgEl, f, which) {
   }
 
   const nodes = [center, ...items, ...extra];
-  const links = items.map(n => ({ source: center.id, target: n.id, affinity: n.affinity }))
+  const baseLinks = items.map(n => ({ source: center.id, target: n.id, affinity: n.affinity }))
     .concat(extra.map(s => ({ source: s.parent, target: s.id, affinity: s.affinity })));
+  const bridges = bridgeLinksFor(items);
+  const links = baseLinks.concat(bridges);
 
   // Pin center
   center.fx = w / 2; center.fy = h / 2;
@@ -1513,6 +1884,19 @@ function setMode(m) {
     }
   } else if (panelB) {
     panelB.remove();
+  }
+  // Heatmap host (compare → heatmap view) cleanup when leaving compare mode
+  if (m !== 'compare') {
+    document.getElementById('heatmapHost')?.remove();
+    // Make sure panelA exists when returning to filter/graph
+    if (!document.getElementById('panelA')) {
+      const stage = document.getElementById('stage');
+      const p = document.createElement('div');
+      p.className = 'panel';
+      p.id = 'panelA';
+      p.innerHTML = `<div class="panel-label" id="labelA"></div><svg class="constellation" id="svgA"></svg>`;
+      stage.insertBefore(p, stage.firstChild);
+    }
   }
   // For graph mode, build a unified network in panel A
   render();
@@ -1621,17 +2005,30 @@ function renderGraphPanel(panelEl, svgEl) {
 
 /* ── Top-level render ───────────────────────────────────── */
 function render() {
+  // Compare mode + heatmap view: render the matrix instead of constellations
+  if (STATE.mode === 'compare' && STATE.compareView === 'heatmap') {
+    renderCompareHeatmap();
+    document.getElementById('compareToggle').style.display = '';
+    document.getElementById('personaCard').classList.add('hidden');
+    updateMeta();
+    return;
+  }
   if (STATE.mode === 'graph') {
     const panelA = document.getElementById('panelA');
     renderGraphPanel(panelA, document.getElementById('svgA'));
+    document.getElementById('compareToggle').style.display = 'none';
+    document.getElementById('personaCard').classList.add('hidden');
     return;
   }
+  document.getElementById('compareToggle').style.display = STATE.mode === 'compare' ? '' : 'none';
   const panelA = document.getElementById('panelA');
   renderPanel(panelA, document.getElementById('svgA'), STATE.filters.A, 'A');
   if (STATE.mode === 'compare') {
     const panelB = document.getElementById('panelB');
     if (panelB) renderPanel(panelB, document.getElementById('svgB'), STATE.filters.B, 'B');
   }
+  applyPersona(STATE.filters.A);
+  renderHistogram();
   updateMeta();
 }
 
@@ -1788,6 +2185,129 @@ function toast(msg) {
   TOAST.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => TOAST.classList.remove('show'), 1500);
+}
+
+/* ── Persona archetypes + AI portraits (deterministic, fake) ── */
+const SECTOR_META = {
+  'Fashion retail':         { hue: '#e8729a', archetype: 'The Margin-Squeezed Operator',     emoji: '👗' },
+  'Food & beverage':        { hue: '#5cb85c', archetype: 'The Cold-Chain Strategist',         emoji: '🍴' },
+  'Professional services':  { hue: '#5b8def', archetype: 'The Billable-Hour Defender',        emoji: '⚖️' },
+  'Health & wellness':      { hue: '#39c2c2', archetype: 'The GLP-1 Tide-Reader',             emoji: '💊' },
+  'Home services':          { hue: '#ffaa3a', archetype: 'The Roll-Up Tactician',             emoji: '🔧' },
+  'SaaS / tech':            { hue: '#a98bff', archetype: 'The Rule-of-40 Disciple',           emoji: '🚀' },
+};
+const SENIORITY_NUANCE = {
+  'C-suite':  'sets vision and budget',
+  'VP':       'owns the number',
+  'Director': 'runs the day-to-day',
+  'Manager':  'ships the work',
+  'Founder':  'wears every hat',
+};
+function personaFor(f) {
+  const meta = SECTOR_META[f.sector] || { hue: '#888', archetype: 'The Generalist', emoji: '🔷' };
+  const nuance = SENIORITY_NUANCE[f.seniority] || '';
+  // Deterministic 60-word portrait via template + seeded variants
+  const seed = seedFor(f);
+  const r = randFn(seed);
+  const TENSIONS = [
+    'caught between margin pressure and Gen Z attention',
+    'navigating an AI cost curve that won\'t cooperate',
+    'rebuilding a CAC model that broke last quarter',
+    'rationalising a portfolio after the GLP-1 reset',
+    'translating board mandates into shippable plays',
+    'protecting culture while the headcount budget shrinks',
+  ];
+  const HABITS = [
+    'reads a board memo before coffee',
+    'opens LinkedIn before email most mornings',
+    'lurks in three subreddits they\'d never admit to',
+    'screenshots Slack debates for the keepfile',
+    'flags one Bloomberg article a day to the team',
+    'has Acquired and Lenny\'s on a weekly rotation',
+  ];
+  const NEEDS = [
+    'wants signal, not commentary',
+    'wants vendors to lead with the number',
+    'wants peer benchmarks, not best practices',
+    'wants a 90-day plan and a slide that survives a CFO',
+    'wants a contrarian take, then the data behind it',
+  ];
+  const tension = TENSIONS[Math.floor(r() * TENSIONS.length)];
+  const habit = HABITS[Math.floor(r() * HABITS.length)];
+  const need = NEEDS[Math.floor(r() * NEEDS.length)];
+  const sizeBand = { '1–10': '1.4M', '11–50': '320K', '51–200': '92K' }[f.size] || '120K';
+  const dmMult = f.seniority === 'C-suite' ? 0.045 : f.seniority === 'VP' ? 0.082 : f.seniority === 'Director' ? 0.16 : f.seniority === 'Manager' ? 0.34 : 0.12;
+  const sizeNum = parseFloat(sizeBand) * (sizeBand.endsWith('M') ? 1000 : 1);
+  // Region modifier
+  const regionM = f.region === 'US' ? 1.0 : f.region === 'EU' ? 0.78 : 0.55;
+  const orgsK = sizeNum * regionM;
+  const dmK = orgsK * dmMult * (1.4 + r() * 0.6) * 6; // ~ multiple decision-makers per org
+  return {
+    accent: meta.hue,
+    archetype: `${meta.emoji} ${meta.archetype}`,
+    portrait: `A ${f.seniority} in ${f.sector.toLowerCase()} (${f.size} · ${f.region}) who ${nuance}, ${tension}. They ${habit}, and ${need}. Decisions get made on the LinkedIn timeline; permission gets earned in r/communities they read after hours.`,
+    orgsLabel: orgsK >= 1000 ? (orgsK / 1000).toFixed(1) + 'K' : Math.round(orgsK) + '',
+    dmLabel: dmK >= 1000 ? (dmK / 1000).toFixed(1) + 'K' : Math.round(dmK) + '',
+  };
+}
+
+function applyPersona(f) {
+  const card = document.getElementById('personaCard');
+  if (!card) return;
+  if (STATE.mode !== 'filter') { card.classList.add('hidden'); return; }
+  const p = personaFor(f);
+  card.style.setProperty('--persona-accent', p.accent);
+  document.getElementById('personaName').textContent = p.archetype;
+  document.getElementById('personaPortrait').textContent = p.portrait;
+  document.getElementById('personaOrgs').textContent = '~' + p.orgsLabel;
+  document.getElementById('personaDM').textContent = '~' + p.dmLabel;
+  if (!STATE.personaCollapsed) card.classList.remove('hidden');
+}
+
+document.getElementById('personaToggle')?.addEventListener('click', () => {
+  STATE.personaCollapsed = !STATE.personaCollapsed;
+  const card = document.getElementById('personaCard');
+  card.classList.toggle('hidden', STATE.personaCollapsed);
+});
+
+/* ── Bridges (LinkedIn ↔ Reddit semantic links) ──────────── */
+const BRIDGES = {
+  'GLP-1 demand shock':           'r/GLP1',
+  'GLP-1 channel shift':          'r/GLP1',
+  'Plant-based reset':            'r/Cooking',
+  'Recovery & sleep tech':        'r/sleep',
+  'CGM for non-diabetics':        'r/CGM',
+  'Wearable data ROI':            'r/peloton',
+  'AI cost gross margin':         'r/ChatGPTPro',
+  'PLG vs sales-led':             'r/SmallBusiness',
+  'Vibe coding ops':              'r/MechanicalKeyboards',
+  'Founder mode essays':          'r/HENRYfinance',
+  'Restaurant M&A':               'r/restaurateur',
+  'Cold-chain economics':         'r/AskCulinary',
+  'Coffee SKU rationalization':   'r/Coffee',
+  'TikTok Shop attribution':      'r/Sneakers',
+  'Influencer ROI debates':       'r/podcasts',
+  'Chick-fil-A culture':          'r/AskMen',
+  'AI try-on tech':               'r/femalefashionadvice',
+  'Resale & circular fashion':    'r/femalefashionadvice',
+  'SEO collapse':                 'r/HomeImprovement',
+  'Yelp vs Google reviews':       'r/SmallBusiness',
+  'Field tech supply':            'r/Plumbing',
+  'Telehealth retention':         'r/Skincareaddiction',
+};
+function bridgeLinksFor(items) {
+  const byLabel = new Map();
+  items.forEach(n => {
+    if (n.kind === 'linkedin') byLabel.set('li:' + n.label, n);
+    if (n.kind === 'reddit')   byLabel.set('rd:' + n.label, n);
+  });
+  const links = [];
+  Object.entries(BRIDGES).forEach(([li, rd]) => {
+    const a = byLabel.get('li:' + li);
+    const b = byLabel.get('rd:' + rd);
+    if (a && b) links.push({ source: a.id, target: b.id, kind: 'bridge' });
+  });
+  return links;
 }
 
 /* ── Sticky notes ───────────────────────────────────────── */
@@ -1983,6 +2503,258 @@ ACTION.close.addEventListener('click', () => {
 });
 ACTION.articles.addEventListener('click', () => {
   if (ACTION.active) openArticles(ACTION.active.node);
+});
+
+/* ── Affinity histogram (legend) ────────────────────────── */
+function renderHistogram() {
+  const el = document.getElementById('legendHisto');
+  if (!el) return;
+  const f = STATE.filters.A;
+  const { items } = buildNodes(f);
+  const visible = applyQuickView(items, STATE.quickView);
+  // 8 bins from 0.35 to 1.0
+  const BINS = 8;
+  const min = 0.35, max = 1.0;
+  const counts = new Array(BINS).fill(0);
+  visible.forEach(n => {
+    const a = Math.max(min, Math.min(max, n.affinity || 0));
+    const idx = Math.min(BINS - 1, Math.floor((a - min) / (max - min) * BINS));
+    counts[idx]++;
+  });
+  const peak = Math.max(1, ...counts);
+  el.innerHTML = counts.map(c =>
+    `<div class="legend-histo-bar" style="height:${(c / peak) * 100}%"></div>`
+  ).join('');
+}
+
+/* ── Search palette (Cmd-K) ─────────────────────────────── */
+const PAL = {
+  backdrop: document.getElementById('paletteBackdrop'),
+  input: document.getElementById('paletteInput'),
+  list: document.getElementById('paletteList'),
+};
+function buildPaletteIndex() {
+  // Build a unique list of all topics + subreddits + sectors across seeds
+  const seen = new Set();
+  const out = [];
+  Object.values(LINKEDIN_SEEDS).forEach(arr =>
+    arr.forEach(label => {
+      if (!seen.has('li:' + label)) { seen.add('li:' + label); out.push({ kind: 'linkedin', label }); }
+    }));
+  Object.values(REDDIT_SEEDS).forEach(arr =>
+    arr.forEach(([sub, post]) => {
+      const key = 'rd:' + sub;
+      if (!seen.has(key)) { seen.add(key); out.push({ kind: 'reddit', label: sub, sublabel: post }); }
+    }));
+  Object.keys(SECTOR_META).forEach(s => out.push({ kind: 'sector', label: s, sublabel: 'Filter to this sector' }));
+  return out;
+}
+let _paletteIndex = null;
+let _paletteActive = 0;
+let _paletteResults = [];
+function openPalette() {
+  PAL.backdrop.classList.add('open');
+  PAL.input.value = '';
+  PAL.input.focus();
+  if (!_paletteIndex) _paletteIndex = buildPaletteIndex();
+  _paletteActive = 0;
+  renderPaletteResults('');
+}
+function closePalette() { PAL.backdrop.classList.remove('open'); }
+function renderPaletteResults(q) {
+  const term = q.toLowerCase().trim();
+  let results = _paletteIndex || [];
+  if (term) {
+    results = results.filter(r =>
+      r.label.toLowerCase().includes(term) ||
+      (r.sublabel && r.sublabel.toLowerCase().includes(term))
+    );
+  }
+  results = results.slice(0, 30);
+  _paletteResults = results;
+  if (_paletteActive >= results.length) _paletteActive = 0;
+  PAL.list.innerHTML = results.map((r, i) => {
+    const e = topicEmoji(r) || (r.kind === 'sector' ? SECTOR_META[r.label]?.emoji : '🔷');
+    const kindLabel = r.kind === 'linkedin' ? 'LinkedIn' : r.kind === 'reddit' ? 'Reddit' : 'Sector';
+    return `<div class="palette-item${i === _paletteActive ? ' active' : ''}" data-i="${i}">
+      <span class="pi-emoji">${e || '·'}</span>
+      <span class="pi-name">${r.label}${r.sublabel ? ` <span style="color:var(--ink-3);font-weight:500"> · ${r.sublabel}</span>` : ''}</span>
+      <span class="pi-kind">${kindLabel}</span>
+    </div>`;
+  }).join('') || '<div style="padding:18px;color:var(--ink-3);font-size:12px">No matches</div>';
+  PAL.list.querySelectorAll('.palette-item').forEach(el => {
+    el.addEventListener('click', () => {
+      _paletteActive = parseInt(el.dataset.i, 10);
+      activatePaletteResult();
+    });
+  });
+}
+function activatePaletteResult() {
+  const r = _paletteResults[_paletteActive];
+  if (!r) return;
+  closePalette();
+  if (r.kind === 'sector') {
+    STATE.filters.A.sector = r.label;
+    STATE.positions.A.clear();
+    STATE.drilledNodeId.A = null;
+    document.querySelectorAll('#setA select[data-key="sector"]').forEach(s => s.value = r.label);
+    render();
+    return;
+  }
+  // Topic / subreddit: drill into it (auto-filter to a combo where it appears)
+  const labelKey = r.kind === 'linkedin' ? 'li:' + r.label : 'rd:' + r.label + ':' + (r.sublabel || '');
+  const f = STATE.filters.A;
+  const { items } = buildNodes(f);
+  const match = items.find(n => n.id === labelKey || n.label === r.label);
+  if (match) {
+    STATE.drilledNodeId.A = match.id;
+    showActionCard(match, 'A');
+    render();
+    toast('Found: ' + r.label);
+  } else {
+    // Try to find a sector / seniority where this topic exists
+    const found = findFilterFor(r);
+    if (found) {
+      STATE.filters.A = { ...DEFAULT_FILTER, ...found };
+      // Sync the dropdowns
+      Object.entries(found).forEach(([k, v]) => {
+        document.querySelectorAll(`#setA select[data-key="${k}"]`).forEach(s => s.value = v);
+      });
+      STATE.positions.A.clear();
+      STATE.drilledNodeId.A = null;
+      hideActionCard();
+      render();
+      toast('Pivoted filters to surface: ' + r.label);
+    } else {
+      toast('No filter combo surfaces this topic in the seed set.');
+    }
+  }
+}
+function findFilterFor(r) {
+  const KEYS = Object.keys(LINKEDIN_SEEDS);
+  for (const k of KEYS) {
+    if (k === 'default') continue;
+    const arr = (r.kind === 'linkedin') ? LINKEDIN_SEEDS[k] : (REDDIT_SEEDS[k] || []).map(x => x[0]);
+    if (arr && arr.includes(r.label)) {
+      const [sector, seniority] = k.split('|');
+      return { sector, seniority };
+    }
+  }
+  return null;
+}
+PAL.input.addEventListener('input', e => renderPaletteResults(e.target.value));
+PAL.input.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); closePalette(); }
+  else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _paletteActive = Math.min(_paletteResults.length - 1, _paletteActive + 1);
+    renderPaletteResults(PAL.input.value);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _paletteActive = Math.max(0, _paletteActive - 1);
+    renderPaletteResults(PAL.input.value);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    activatePaletteResult();
+  }
+});
+PAL.backdrop.addEventListener('click', e => { if (e.target === PAL.backdrop) closePalette(); });
+// Cmd-K / Ctrl-K to open
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    openPalette();
+  }
+});
+
+/* ── Compare heatmap view (rows=audiences, cols=topics) ── */
+function renderCompareHeatmap() {
+  const stage = document.getElementById('stage');
+  // Remove existing panels
+  ['panelA','panelB'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
+  // Remove any existing host
+  document.getElementById('heatmapHost')?.remove();
+
+  const A = buildNodes(STATE.filters.A);
+  const B = buildNodes(STATE.filters.B);
+  // Collect all topics keyed by label
+  const all = new Map();
+  function add(items, which, k) {
+    items.forEach(n => {
+      const key = n.kind + ':' + n.label;
+      if (!all.has(key)) all.set(key, { kind: n.kind, label: n.label, sub: n.sublabel, A: 0, B: 0, max: 0 });
+      const e = all.get(key);
+      e[which] = n.affinity;
+      e.max = Math.max(e.max, n.affinity);
+    });
+  }
+  add(A.items, 'A');
+  add(B.items, 'B');
+  const cols = [...all.values()]
+    .sort((a, b) => b.max - a.max)
+    .slice(0, 14);
+
+  const host = document.createElement('div');
+  host.id = 'heatmapHost';
+  host.className = 'heatmap-host';
+  host.innerHTML = `
+    <div class="heatmap-wrap">
+      <div class="heatmap-title">Affinity matrix · two audiences × ${cols.length} top topics</div>
+      <div class="heatmap" id="heatmapGrid"></div>
+    </div>`;
+  stage.appendChild(host);
+
+  const grid = host.querySelector('#heatmapGrid');
+  grid.style.gridTemplateColumns = `220px repeat(${cols.length}, 1fr)`;
+  // Rows: 1) col headers 2) row A 3) row B
+  const labelA = `${STATE.filters.A.seniority} · ${STATE.filters.A.sector}`;
+  const labelB = `${STATE.filters.B.seniority} · ${STATE.filters.B.sector}`;
+  function cellColor(score, kind) {
+    if (!score) return 'rgba(255,255,255,0.04)';
+    const rgb = kind === 'linkedin' ? '77,154,255' : '255,122,74';
+    const op = 0.18 + score * 0.7;
+    return `rgba(${rgb},${op})`;
+  }
+  let html = '<div class="hm-corner"></div>';
+  cols.forEach(c => {
+    const e = topicEmoji({ kind: c.kind, label: c.label });
+    html += `<div class="hm-col-label">${e ? e + ' ' : ''}${c.label}</div>`;
+  });
+  // Row A
+  html += `<div class="hm-row-label">${labelA}</div>`;
+  cols.forEach(c => html += `<div class="hm-cell" style="background:${cellColor(c.A, c.kind)}">${c.A ? c.A.toFixed(2) : '—'}</div>`);
+  // Row B
+  html += `<div class="hm-row-label">${labelB}</div>`;
+  cols.forEach(c => html += `<div class="hm-cell" style="background:${cellColor(c.B, c.kind)}">${c.B ? c.B.toFixed(2) : '—'}</div>`);
+  grid.innerHTML = html;
+}
+
+// Compare-toggle wiring
+document.querySelectorAll('#compareToggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    STATE.compareView = b.dataset.cv;
+    document.querySelectorAll('#compareToggle button').forEach(x =>
+      x.classList.toggle('active', x === b));
+    // If switching back to constellations, restore the panels
+    if (STATE.compareView === 'constellations') {
+      document.getElementById('heatmapHost')?.remove();
+      const stage = document.getElementById('stage');
+      // Re-create both panels
+      ['A','B'].forEach(w => {
+        if (!document.getElementById('panel' + w)) {
+          const p = document.createElement('div');
+          p.className = 'panel';
+          p.id = 'panel' + w;
+          p.innerHTML = `<div class="panel-label" id="label${w}"></div><svg class="constellation" id="svg${w}"></svg>`;
+          stage.appendChild(p);
+        }
+      });
+    }
+    render();
+  });
 });
 
 /* ── Articles modal ─────────────────────────────────────── */
