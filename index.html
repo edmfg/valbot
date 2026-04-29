@@ -117,22 +117,29 @@
     min-height: 0;
     background: var(--paper);
     overflow: hidden;
+    display: flex;
   }
   .stage.compare {
     display: grid; grid-template-columns: 1fr 1fr;
     border-top: 0.5px solid var(--line);
   }
   .stage.compare .panel + .panel { border-left: 0.5px solid var(--line); }
-  .panel { position: relative; overflow: hidden; }
+  .panel {
+    position: relative;
+    overflow: hidden;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+  }
   .panel-label {
     position: absolute; top: 12px; left: 16px;
     font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); pointer-events: none;
   }
   svg.constellation {
+    position: absolute; inset: 0;
     width: 100%; height: 100%; display: block;
     cursor: grab;
-    position: absolute; inset: 0;
   }
   svg.constellation:active { cursor: grabbing; }
   .link { stroke: var(--ink); stroke-opacity: 0.18; }
