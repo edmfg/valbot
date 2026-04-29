@@ -493,18 +493,24 @@
   .legend.collapsed .legend-affinity { display: none; }
   .legend-pill {
     display: none;
-    align-items: center; gap: 6px;
-    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    align-items: center; gap: 10px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--ink-2); font-weight: 600;
     white-space: nowrap;
   }
   .legend.collapsed .legend-pill { display: inline-flex; }
-  .legend-pill::before {
-    content: ''; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--linkedin);
-    box-shadow:
-      8px 0 0 var(--reddit),
-      16px 0 0 var(--gold);
+  .legend-pill-dots {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+  }
+  .legend-pill-dots i {
+    width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+  }
+  .legend-pill-dots .d-li { background: var(--linkedin); }
+  .legend-pill-dots .d-rd { background: var(--reddit); }
+  .legend-pill-dots .d-br {
+    width: 14px; height: 0;
+    border-top: 1.5px dashed var(--gold);
+    border-radius: 0;
   }
   .legend-title {
     font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
@@ -1082,7 +1088,7 @@
     <svg class="constellation" id="svgA"></svg>
   </div>
   <div class="legend" id="legend" title="Click to expand / collapse legend">
-    <span class="legend-pill">Legend &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <span class="legend-pill"><span class="legend-pill-dots"><i class="d-li"></i><i class="d-rd"></i><i class="d-br"></i></span><span>Legend</span></span>
     <div class="legend-title">Legend</div>
     <div class="legend-row"><span class="legend-dot aud"></span><b>Audience</b><span>target segment (center)</span></div>
     <div class="legend-row"><span class="legend-dot li"></span><b>LinkedIn</b><span>business topic</span></div>
