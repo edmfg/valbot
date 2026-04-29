@@ -268,6 +268,11 @@
     stroke-linejoin: round;
   }
   .node.audience text { fill: var(--ink); font-weight: 700; font-size: 13px; letter-spacing: 0; }
+  .node-emoji {
+    stroke: none !important;
+    paint-order: normal;
+    pointer-events: none;
+  }
   .node.linkedin circle { fill: var(--linkedin); filter: drop-shadow(0 0 8px rgba(77,154,255,0.35)); }
   .node.reddit circle { fill: var(--reddit); filter: drop-shadow(0 0 8px rgba(255,122,74,0.35)); }
   [data-theme="light"] .node.linkedin circle,
@@ -1034,6 +1039,17 @@
     font-size: 10px; color: var(--ink-3); margin-top: 12px;
     letter-spacing: 0.04em;
   }
+  .about-p {
+    font-size: 13px; line-height: 1.6; color: var(--ink-2);
+    margin: 0 0 6px;
+  }
+  .about-p b { color: var(--ink); font-weight: 600; }
+  .about-list {
+    margin: 6px 0 6px; padding-left: 20px;
+    font-size: 13px; line-height: 1.7; color: var(--ink-2);
+  }
+  .about-list li { margin-bottom: 2px; }
+  .about-list b { color: var(--ink); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -1045,6 +1061,7 @@
     <span class="brand-tag">Audience constellation · Google B2B SMB prototype</span>
   </div>
   <div class="actions">
+    <button class="icon-btn" id="aboutBtn" title="What is this tool?"><span style="font-weight:700;letter-spacing:0.04em">101</span></button>
     <div class="seg" id="modeSeg">
       <button data-mode="filter" class="active">Filter</button>
       <button data-mode="graph">Graph</button>
@@ -1148,6 +1165,48 @@
     <button id="zoomIn" title="Zoom in">+</button>
     <button id="zoomOut" title="Zoom out">−</button>
     <button id="zoomFit" title="Reset view">⤧</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="aboutModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <div class="modal-eyebrow">101 · About this tool</div>
+        <div class="modal-title">Semantic themes for Google's B2B SMB audience</div>
+      </div>
+      <button class="modal-close" id="aboutClose" aria-label="Close">×</button>
+    </div>
+
+    <div class="modal-section-label">What this is</div>
+    <p class="about-p">A media-planning prototype that visualises a target audience as a constellation. The center is the <b>audience</b> defined by seniority, sector, company size, and region. Around it orbit the <b>LinkedIn topics</b> (blue) they engage with at work and the <b>Reddit communities</b> (orange) they inhabit outside of work.</p>
+
+    <div class="modal-section-label">Why two platforms</div>
+    <p class="about-p">Most planning tools target either professional intent (LinkedIn, B2B platforms) or cultural identity (lifestyle media, social). We argue the same person operates in both — and the strongest creative bridges the two. The dashed gold lines mark <b>bridges</b>: LinkedIn topics and Reddit communities that share the same underlying interest. They're the highest-leverage activation points for a single narrative across both contexts.</p>
+
+    <div class="modal-section-label">How affinity is computed</div>
+    <p class="about-p">For this prototype, affinity scores are <i>deterministic and illustrative</i>. A pseudo-random seed derived from the filter combination produces stable, plausible spreads:</p>
+    <ul class="about-list">
+      <li><b>LinkedIn:</b> 0.55–1.00 range (stronger on average; topics are pre-curated to a sector)</li>
+      <li><b>Reddit:</b> 0.35–0.90 range (more varied; reflects long-tail community fit)</li>
+      <li>Same filter selection → same constellation every time, so views are shareable via URL</li>
+    </ul>
+    <p class="about-p">In a production version this would be backed by real engagement data: LinkedIn API content interactions for the LinkedIn dimension, Reddit's public API + audience panels for the Reddit dimension, joined on industry / role / company-size signals.</p>
+
+    <div class="modal-section-label">How to use it</div>
+    <ul class="about-list">
+      <li><b>Filter:</b> Pick seniority / sector / size / region. The constellation re-animates.</li>
+      <li><b>Hover</b> a circle for a preview · <b>Click</b> to expand related sub-topics · <b>Double-click</b> to re-pivot.</li>
+      <li><b>Drag</b> the canvas to pan · <b>Scroll</b> to zoom · <b>Cmd/Ctrl-K</b> opens search.</li>
+      <li><b>View example content</b> on any node opens 3 real articles or community threads.</li>
+      <li><b>Quick views</b> reduce the constellation to top 3, top 5, LinkedIn-only, Reddit-only, strong, or bridges.</li>
+      <li><b>Compare mode</b> shows two audiences side-by-side or as a heatmap matrix.</li>
+    </ul>
+
+    <div class="modal-section-label">Output for media planners</div>
+    <p class="about-p">For each audience the dashboard surfaces a <b>persona portrait</b>, <b>reach estimates</b> (orgs and decision-makers), the <b>top business contexts</b> for LinkedIn buying, and the <b>cultural contexts</b> for Reddit, contextual, and influencer plays — with bridges highlighting where the same creative idea can land in both.</p>
+
+    <p class="articles-note">v0.1 · prototype · all data illustrative · Google B2B SMB</p>
   </div>
 </div>
 
@@ -1626,10 +1685,20 @@ function makeSimulation(svgSel, width, height, nodes, links, which, bridges = []
       ? `filter: drop-shadow(0 0 18px ${sectorHue}aa)`
       : null);
 
+  // Emoji centered inside the circle
   node.append('text')
+    .attr('class', 'node-emoji')
+    .attr('text-anchor', 'middle')
+    .attr('dominant-baseline', 'central')
+    .attr('dy', 1)
+    .style('font-size', d => Math.max(11, nodeRadius(d) * 0.85) + 'px')
+    .text(d => d.kind === 'audience' ? (SECTOR_META[STATE.filters[which]?.sector]?.emoji || '') : (topicEmoji(d) || ''));
+  // Label below the circle
+  node.append('text')
+    .attr('class', 'node-label')
     .attr('text-anchor', 'middle')
     .attr('dy', d => nodeRadius(d) + 14)
-    .text(d => textFor(d));
+    .text(d => labelOnly(d));
 
   // Drag
   const drag = d3.drag()
@@ -1654,12 +1723,16 @@ function makeSimulation(svgSel, width, height, nodes, links, which, bridges = []
       .interrupt()
       .transition().duration(160).ease(d3.easeCubicOut)
       .attr('r', nodeRadius(d) * 1.55);
-    g.select('text')
+    g.select('text.node-label')
       .interrupt()
       .transition().duration(160).ease(d3.easeCubicOut)
       .attr('dy', nodeRadius(d) * 1.55 + 16)
       .style('font-size', '14px')
       .style('font-weight', 700);
+    g.select('text.node-emoji')
+      .interrupt()
+      .transition().duration(160).ease(d3.easeCubicOut)
+      .style('font-size', Math.max(13, nodeRadius(d) * 1.55 * 0.85) + 'px');
   })
       .on('mousemove', moveHover)
       .on('mouseleave', function (event, d) {
@@ -1670,12 +1743,16 @@ function makeSimulation(svgSel, width, height, nodes, links, which, bridges = []
           .interrupt()
           .transition().duration(180).ease(d3.easeCubicOut)
           .attr('r', nodeRadius(d));
-        g.select('text')
+        g.select('text.node-label')
           .interrupt()
           .transition().duration(180).ease(d3.easeCubicOut)
           .attr('dy', nodeRadius(d) + 14)
           .style('font-size', null)
           .style('font-weight', null);
+        g.select('text.node-emoji')
+          .interrupt()
+          .transition().duration(180).ease(d3.easeCubicOut)
+          .style('font-size', Math.max(11, nodeRadius(d) * 0.85) + 'px');
       });
 
   // Click → drill (expand related circles) + reveal action card
@@ -1766,6 +1843,7 @@ function textFor(d) {
   const e = topicEmoji(d) ;
   return (e ? e + '  ' : '') + d.label;
 }
+function labelOnly(d) { return d.label; }
 
 /* ── Topic → emoji ──────────────────────────────────────── */
 const TOPIC_EMOJI = {
@@ -2074,8 +2152,16 @@ function renderGraphPanel(panelEl, svgEl) {
   svg.call(zoom).on('dblclick.zoom', null);
   svgEl.__zoomBehavior = zoom;
   node.append('circle')
-    .attr('r', d => d.kind === 'audience' ? 12 : nodeRadius(d) - 1);
+    .attr('r', d => d.kind === 'audience' ? 14 : nodeRadius(d) - 1);
   node.append('text')
+    .attr('class', 'node-emoji')
+    .attr('text-anchor', 'middle')
+    .attr('dominant-baseline', 'central')
+    .attr('dy', 1)
+    .style('font-size', d => Math.max(10, (d.kind === 'audience' ? 14 : nodeRadius(d) - 1) * 0.85) + 'px')
+    .text(d => topicEmoji(d) || '');
+  node.append('text')
+    .attr('class', 'node-label')
     .attr('text-anchor', 'middle')
     .attr('dy', d => (d.kind === 'audience' ? 14 : nodeRadius(d) + 2) + 10)
     .text(d => d.label);
@@ -2256,6 +2342,19 @@ function toggleTheme() {
   encodeUrl();
 }
 document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+// 101 / About modal
+(function () {
+  const modal = document.getElementById('aboutModal');
+  const open = () => modal.classList.add('open');
+  const close = () => modal.classList.remove('open');
+  document.getElementById('aboutBtn').addEventListener('click', open);
+  document.getElementById('aboutClose').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) close();
+  });
+})();
 
 function programmaticZoom(factor) {
   ['A', 'B'].forEach(w => {
